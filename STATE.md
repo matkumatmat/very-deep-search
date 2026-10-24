@@ -1,0 +1,52 @@
+# STATE — resumable program state
+
+`finalize!` reads this file first. Keep it current; it is the only
+memory a fresh session has.
+
+## Current
+
+- phase: 0 — Bootstrap, closing (Batch 0 ordered before commit)
+- status: .gitignore in place, dev-corpus/ ignored; initial commit approved, running next
+- updated: 2026-10-25 (batch session)
+
+## Next actions
+
+1. [x] Move staged tree to final location (observed done)
+2. [x] Run Phase 0 gates in final location — green 2026-10-25
+3. [x] Batch 0: read dev-corpus/README.md, obey rules (distill-only input, never commit)
+4. [x] Batch 0: .gitignore with dev-corpus/ (verified via check-ignore)
+5. [ ] git add + initial commit (APPROVED by user 2026-10-25, after .gitignore)
+6. [ ] Phase 1 batch 1: cards 6-10 (ARXIV, BASE, CORE, EUROPEPMC, ISJD)
+
+## Card order (Phase 1)
+
+- Cards 1-5 shipped: CROSSREF, OPENALEX, SCHOLAR, GARUDA, DOAJ.
+- Cards 6-20 = remaining 15 corpus sources, alphabetical by key:
+  batch 1 ARXIV/BASE/CORE/EUROPEPMC/ISJD; batch 2 MORAREF/NELITI/
+  ONESEARCH/OPENAIRE/PUBMED; batch 3 RAMA/RESEARCHGATE/
+  SEMANTICSCHOLAR/SINTA/UNPAYWALL.
+
+## Gates log
+
+- 2026-10-25: staged tree — skill validate true/zero diagnostics,
+  24/24 unit checks, sanitization greps clean. Observed in staging;
+  re-run after move.
+- 2026-10-25: final location — `muse skills validate . --json`
+  valid=true, zero diagnostics; `tests/run.sh` 24/24 passed;
+  sanitization greps clean (no absolute paths, emails, tokens);
+  `git status` shows fresh git init, no commits, no remote.
+- 2026-10-25: Batch 0 — dev-corpus/ present (20 sources x 5 files),
+  rules read; .gitignore created, check-ignore confirms
+  dev-corpus/README.md ignored.
+
+## Decisions log
+
+- Runner v1 = skill + scripts + one-prompt UX (no agentless auto-scraper).
+- Parallelism via Orca child worktrees; fallback subagent isolation.
+- finalize! defined in AGENTS.md + PROTOCOL-finalize.md.
+- 2026-10-25: reconciled drift — move + git init were already done
+  outside a finalize! session; boxes 1-2 flipped after re-verifying
+  gates in place. Initial commit still needs explicit human approval.
+- 2026-10-25: Batch 0 before commit per user order; commit approved
+  once .gitignore exists. Card numbering alphabetical by source key.
+  Session logs (logs.md) never read for distillation.

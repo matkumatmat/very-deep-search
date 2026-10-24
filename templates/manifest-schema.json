@@ -1,0 +1,43 @@
+{
+  "$comment": "Manifest row documentation for the content pass (one JSON object per line). One row per artifact.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "bytes": {
+      "description": "Artifact size in bytes, or the string download_failed.",
+      "type": ["integer", "string"]
+    },
+    "evidence_quote": {
+      "description": "Short quote (max 300 chars) from the content supporting the verdict.",
+      "type": "string"
+    },
+    "filename": {
+      "description": "Local filename (sanitized identifier + extension).",
+      "type": "string"
+    },
+    "identifier": {
+      "description": "Canonical ID matching the staging record.",
+      "type": "string"
+    },
+    "reason": {
+      "description": "Why this verdict; for failures, the classified cause.",
+      "type": "string"
+    },
+    "source_url": {
+      "description": "URL the artifact was fetched from (with fallback chain on failure).",
+      "type": "string"
+    },
+    "text_chars": {
+      "description": "Extracted-text length when content was verified, else null.",
+      "type": ["integer", "null"]
+    },
+    "verdict": {
+      "description": "Content verdict.",
+      "enum": ["relevant", "not_relevant", "download_failed"],
+      "type": "string"
+    }
+  },
+  "required": ["bytes", "filename", "identifier", "reason", "source_url", "verdict"],
+  "title": "very-deep-search content manifest row",
+  "type": "object"
+}

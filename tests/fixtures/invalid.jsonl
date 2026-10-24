@@ -1,0 +1,10 @@
+{not json
+{"identifier": "10.0/x"}
+{"decision": "maybe", "evidence_ref": "ev/ok.txt", "identifier": "10.0/l3", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": ["curl https://example.org/l3"], "source_url": "https://example.org/l3", "title": "T"}
+{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0/a b", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": ["curl https://example.org/l4"], "source_url": "https://example.org/l4", "title": "T"}
+{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0/l5", "layer1_status": 200, "layer2_match": "true", "reason": "R", "reverify": ["curl https://example.org/l5"], "source_url": "https://example.org/l5", "title": "T"}
+{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0/l6", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": [], "source_url": "https://example.org/l6", "title": "T"}
+{"decision": "pass", "evidence_ref": "ev/does-not-exist.txt", "identifier": "10.0/l7", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": ["curl https://example.org/l7"], "source_url": "https://example.org/l7", "title": "T"}
+{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0000/DUP.1", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": ["curl https://example.org/l8"], "source_url": "https://example.org/l8", "title": "T"}
+{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0000/dup.1", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": ["curl https://example.org/l9"], "source_url": "https://example.org/l9", "title": "T"}
+{"decision": "pass", "evidence_ref": "ev/empty.txt", "identifier": "10.0/l10", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": ["curl https://example.org/l10"], "source_url": "https://example.org/l10", "title": "T"}

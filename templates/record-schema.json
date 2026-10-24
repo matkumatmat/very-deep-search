@@ -1,0 +1,48 @@
+{
+  "$comment": "Record schema documentation for very-deep-search staging rows (one JSON object per line). Enforced by scripts/vds.py validate.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "decision": {
+      "description": "Verdict. Only these two values exist.",
+      "enum": ["pass", "reject"],
+      "type": "string"
+    },
+    "evidence_ref": {
+      "description": "Workspace-relative path to saved evidence. Mandatory non-empty for pass; the file must exist and be non-empty.",
+      "type": "string"
+    },
+    "identifier": {
+      "description": "Canonical ID, lowercase-normalized for dedup. Non-empty, no whitespace.",
+      "type": "string"
+    },
+    "layer1_status": {
+      "description": "Observed locator-resolution status, recorded as-is (int or string).",
+      "type": ["integer", "string"]
+    },
+    "layer2_match": {
+      "description": "Independent metadata match. Must be a real boolean.",
+      "type": "boolean"
+    },
+    "reason": {
+      "description": "Non-empty. Cites the criterion and the observed evidence.",
+      "type": "string"
+    },
+    "reverify": {
+      "description": "Exact commands reproducing the verification. Mandatory non-empty for pass.",
+      "items": {"type": "string"},
+      "type": "array"
+    },
+    "source_url": {
+      "description": "Landing/content URL where the item was found.",
+      "type": "string"
+    },
+    "title": {
+      "description": "Item title.",
+      "type": "string"
+    }
+  },
+  "required": ["decision", "evidence_ref", "identifier", "layer1_status", "layer2_match", "reason", "reverify", "source_url", "title"],
+  "title": "very-deep-search staging record",
+  "type": "object"
+}

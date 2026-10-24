@@ -1,0 +1,2 @@
+{"decision": "pass", "evidence_ref": "ev/k1c.txt", "identifier": "10.0000/k1", "layer1_status": 200, "layer2_match": true, "reason": "C copy of K1 loses to A", "reverify": ["curl -sIL https://example.org/k1c"], "source_url": "https://example.org/k1c", "title": "K1 title"}
+{"decision": "reject", "evidence_ref": "", "identifier": "10.0000/K5", "layer1_status": 404, "layer2_match": false, "reason": "C rejects K5", "reverify": [], "source_url": "https://example.org/k5", "title": "K5 title"}
