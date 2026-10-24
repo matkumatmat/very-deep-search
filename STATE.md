@@ -5,9 +5,14 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 2 — Runner UX done, uncommitted (gate passed, confusion closed)
-- status: blind quota-3 passed (4/4 verified); 6/6 confusion fixed; awaiting Phase 2 commit order
+- phase: 3 — QA hardening
+- status: F3.1 PASS, 11/11 triaged (9 fix + 2 wontfix), gates green; Phase 3 commit PROPOSED
 - updated: 2026-10-25 (batch session)
+
+## Standing constraints
+
+- OpenCode blind tests MUST use free models. Paid models are
+  forbidden without explicit user approval (user order 2026-10-25).
 
 ## Next actions
 
@@ -27,9 +32,12 @@ memory a fresh session has.
 14. [x] Phase 2.3: user README + 5-minute quickstart (+ SKILL 11, CHANGELOG 0.2.0)
 15. [x] Phase 2.4: one small redacted demo (demo-quota3, 3 real DOIs, replay test)
 16. [x] Phase 2 gate: blind agent completes quota-3 on user docs alone — PASSED
-17. [ ] Commit Phase 2 (needs explicit approval)
-18. [ ] Publish-phase tech debt (see section below; due Phase 4)
-19. [ ] Phase 3: QA hardening (gate: zero open confusion; budgets met)
+17. [x] Commit Phase 2 (8983bac, approved 2026-10-25)
+18. [x] Phase 3.1: cross-model blind test — PASS (attempt A only; B/C not triggered)
+19. [x] Phase 3.2: per-source request ceilings (budgets.md, 20/20) + compliance test; blind counts compliant (ARXIV 6/40, MORAREF 4/30, RAMA 4/40)
+20. [x] Phase 3.3: 11/11 confusion closed (9 fixed, 2 wontfix recorded below)
+21. [ ] Commit Phase 3 (PROPOSED, awaiting approval — see triage summary in gates log)
+21. [ ] Publish-phase tech debt (see section below; due Phase 4)
 
 ## Card order (Phase 1)
 
@@ -81,6 +89,70 @@ memory a fresh session has.
   content artifact, final.jsonl hand-written, inline lane convention,
   canonical source_url. Limitation: same-model, honor-system
   isolation — true cross-model foreign test deferred to Phase 3 QA.
+- 2026-10-25: Phase 2 committed (8983bac, approved). Phase 2 done.
+- 2026-10-25: INCIDENT — F3.1 blind run launched on paid model
+  (openrouter gemini-pro-latest) before the free-only constraint
+  arrived; terminated within ~1 min. Verified dead: no gemini
+  process remains, run.log frozen at 47 bytes (header only),
+  work dir empty — zero task output, minimal billed exposure.
+  Third worktree /tmp/blindtest3 staged (ARXIV/MORAREF/RAMA sample).
+  claude CLI unusable (not logged in); opencode+OpenRouter is the
+  cross-model vehicle. No relaunch until free-model decision lands.
+- 2026-10-25: user DECIDED option A (nemotron-3-ultra-free full run);
+  sequential fallback B then C on model-limitation failure only
+  (doc-caused failure = fix docs, no fallback); paid models stay
+  forbidden. Attempt A launched, brief unchanged.
+- 2026-10-25: F3.2 done — references/budgets.md (20 ceilings from
+  observed runs + headroom; verification traffic capped 3/candidate);
+  template + SKILL 4 pointer lines; run.sh section 18 (count,
+  coverage vs card set, pinned values); 57/57 green, sanitized.
+- 2026-10-25: F3.1 attempt A (nemotron-3-ultra-free, free tier) —
+  PASS. Quota 3/3 on sampled cards ARXIV/MORAREF/RAMA (topic GNN
+  traffic forecasting); all vds runs exit 0; package validates
+  clean; coordinator independently reproduced 3/3 reverify pairs
+  byte-identical; my spot-checks corroborate (2/2 L1+L2 match).
+  Request counts compliant with budgets.md. B/C fallback untouched.
+  Observation (no action, docs already require): agent wrote 0
+  reject rows (conceptual rejects stayed in REPORT, not lane files).
+- 2026-10-25: F3.1 triage — 11/11 closed: fixed #1 registry-key
+  mapping (SKILL 4), #2 layer1_status values (SKILL 5), #3
+  provenance pattern (ARXIV Example), #4 journal-DOI L1/L2 (ARXIV
+  Traps), #5 maintenance evidence (MORAREF), #7 homepage sniff
+  (RAMA), #8 POST curl (RAMA), #10 optionality note (SKILL 11),
+  #11 lane naming (SKILL 11), plus ARXIV anti-bot split
+  (API-clean vs publisher-landings, non-negotiable row) and
+  MORAREF fallback-A pointer line. Wontfix #6 (no verified
+  Indonesian-member list; inventing IDs = falsehood) and #9
+  (artifact_kind field; reason-label convention suffices,
+  schema frozen pre-publish). All cards stay <=100 lines
+  (triage ceiling was 120; 100-line rule unchanged). Gates:
+  validate true, 57/57, greps clean.
+
+## Confusions log (F3.1 cross-model blind, 11 items)
+
+- #1 registry keys undocumented -> FIXED (SKILL 4: basename rule).
+- #2 layer1_status pass-vs-reject values -> FIXED (SKILL 5: enum sentence).
+- #3 arXiv->journal provenance recording -> FIXED (ARXIV Example pattern).
+- #4 preprint-vs-journal DOI for L1/L2 -> FIXED (ARXIV Traps line).
+- #5 maintenance evidence unspecified -> FIXED (MORAREF: save body/sha256).
+- #6 "national journal" Crossref filter undefined -> WONTFIX: no
+  verified maintained Indonesian-member list exists in evidence;
+  shipping invented member IDs or ISSN prefixes would be falsehood.
+  The card's honesty rule (note proxy in reason) already covers the
+  fallback. Future work: research a verified filter.
+- #7 homepage-vs-article detection -> FIXED (RAMA: marker sniff rule).
+- #8 RAMA POST curl sequence -> FIXED (RAMA: cookie-jar snippet).
+- #9 artifact_kind manifest field -> WONTFIX: the required
+  reason-label convention already distinguishes artifact
+  kinds and the agent used it successfully; a new schema field has
+  no enforcement consumer and churns schema/templates/tests/demo
+  pre-publish. Revisit if a second agent trips on it.
+- #10 --needs-richer "required" -> FIXED (SKILL 11: optionality note;
+  flag was already optional — agent misattribution, one-line prevention).
+- #11 lane naming for keep-order -> FIXED (SKILL 11: lane-a/b convention).
+- ARXIV anti-bot verdict (non-negotiable) -> FIXED (API-clean vs
+  publisher-landing split + skill 8 scoring rule).
+- MORAREF fallback-A example gap -> FIXED (ID-pointer line).
 
 ## Tech debt (publish phase, due Phase 4)
 

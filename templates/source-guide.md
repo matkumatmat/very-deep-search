@@ -39,6 +39,8 @@
 ## Retry budget
 
 - Probe 1x, retry 1x from a different angle, backoff, then STOP.
+- Request ceiling: see `references/budgets.md` (shared policy;
+  never exceed mid-run without recording why).
 
 ## Example
 

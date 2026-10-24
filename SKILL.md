@@ -83,7 +83,9 @@ Do not start gathering until all of these are fixed:
 
 Every source must have a protocol card at `references/sources/<SOURCE>.md`
 before gathering. If none exists, write it first
-(document-before-gather). Each card (max 100 lines):
+(document-before-gather). The registry key is the card basename
+(`ARXIV.md` → `ARXIV`); use exactly that in `contract.json` and
+`vds.py init --sources`. Each card (max 100 lines):
 
 - Access vectors and exact endpoints/parameters, including the canonical
   base domain plus any known-dead legacy domains (never a bare
@@ -96,7 +98,9 @@ before gathering. If none exists, write it first
 - Fallback chain when the primary path is down.
 - Retry budget: probe 1x for status, 1x retry for ambiguous results from
   a different angle, backoff on 429, then STOP and switch angles —
-  never hammer the same door.
+  never hammer the same door. Per-source request ceilings per run
+  live in `references/budgets.md` (policy; exceeding one mid-run
+  means stopping that source, not raising it silently).
 
 Run log: append each run (timestamp, queries, counts, failures) to the
 card's log section or a sibling log file. Honest provenance: what was
@@ -127,6 +131,9 @@ kept with reasons — they prove coverage. `reject` rows still carry
 every field: use `evidence_ref: ""` and `reverify: []`. For rejects
 screened before probing, `layer1_status` is `"not_run"` and
 `layer2_match` is `false`, with the reason noting L2 was not run.
+`layer1_status` for `pass` is the observed success (`200`, or an
+equivalent success string such as `"200-ok"`); for `reject` it is
+the observed failure (`404`, `403`, a challenge note) or `"not_run"`.
 
 ## 6. Orchestration
 
@@ -233,7 +240,8 @@ deterministic):
   refuses the merge), global dedup with deterministic keep-order,
   duplicate report. Merges every row given by default; `--pass-only`
   restricts to `pass` rows. The final merge always uses `--pass-only`.
-  Byte-deterministic output.
+  Name lanes `lane-a`, `lane-b`, ... in contract source order;
+  `--keep-order` must list the same labels. Byte-deterministic output.
 - `vds.py package --final <f> --manifest <m> -o <out-dir>
   [--merged <f>] [--contract <c>] [--excluded <md>]
   [--needs-richer <f>] [--disputes <md>] [--root <dir>]
@@ -242,7 +250,9 @@ deterministic):
   `pass` identifier, then assembles the package (copies +
   evidence + generated README). Any error refuses the package
   and writes nothing. Refuses a non-empty output dir without
-  `--force`. Exit 0 ok, 1 errors found, 2 bad usage.
+  `--force`. All bracketed flags are optional; omitted files are
+  listed as not provided in the generated README.
+  Exit 0 ok, 1 errors found, 2 bad usage.
 
 Example:
 

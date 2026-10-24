@@ -28,9 +28,12 @@
 
 ## Anti-bot & standard response
 
-- None observed. All endpoints (arXiv API, enrichment APIs,
-  resolver) are reachable via plain HTTP. No JS, login, or
-  challenge encountered — no browser needed.
+- arXiv API itself: none observed — reachable via plain HTTP,
+  no JS/login/challenge, no browser needed.
+- Publisher landings are separate: verifying enriched journal
+  DOIs may hit JS-redirect pages or 403s at the publisher.
+  That is L1 publisher business, not arXiv business: score it
+  per skill §8 (challenge bodies fail L1).
 
 ## Parser notes
 
@@ -49,6 +52,8 @@
 - Preprint DOIs (`10.48550/arXiv.*`) pass Layer 1 (they resolve to
   arXiv) but ALWAYS fail Layer 2 (Crossref 404 — they are DataCite
   DOIs). Reject as "no journal DOI", never as verified.
+- L1/L2 always run on the journal DOI; the arXiv ID lives only
+  as provenance in `reason`.
 - False friends: common words with engineering senses (e.g.
   "control" matching control theory) dominate loose queries.
   Prefer exact phrases.
@@ -78,6 +83,9 @@
 - Discovery: `all:"<EXACT PHRASE>"`, then `abs:"<PHRASE>" AND
   abs:<TERM>` narrowing; `ti:` title checks for backbone candidates.
 - Per candidate: fetch `abs` page, enrich DOI, run 2-layer check.
+- Provenance pattern: discovered as `arXiv:<ID>`; journal DOI
+  enriched via backbone; `reason` notes both IDs; `source_url`
+  is the journal landing page, never the `abs` page.
 
 ## Run log
 

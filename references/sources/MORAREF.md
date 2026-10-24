@@ -35,6 +35,9 @@
 - Standard response to that signal: live crawl STOPS — a 200
   carrying identical static content on all paths is
   maintenance, not data. Switch to the fallback chain.
+- Maintenance evidence: save the static page body (or its
+  sha256) as the `site_down` evidence artifact, so the
+  verdict is reproducible.
 - If the site recovers and shows 403/Cloudflare: flag
   `needs_richer_check`, stop curl, take the browser path.
 
@@ -60,8 +63,9 @@
 
 ## Fallback chain
 
-- Fallback A — search-engine index for article-ID enumeration +
-  2-layer DOI verification per candidate.
+- Fallback A — search-engine index for article-ID enumeration
+  (take `/documents/article/<id>` URLs from results as ID
+  pointers) + 2-layer DOI verification per candidate.
 - Fallback B — Crossref API (`/works?query=&rows=&select=`
   minimal), prioritizing national journals as the coverage
   proxy, fallback noted in each record's reason.

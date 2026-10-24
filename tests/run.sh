@@ -267,4 +267,57 @@ else
   exit 1
 fi
 
+# 18. budgets registry: 20/20 card sources, parseable ceilings, pinned values
+BUD="$ROOT/references/budgets.md"
+grep -E '^- [A-Z]+: [0-9]+ /run — basis: .+' "$BUD" | LC_ALL=C sort \
+  > "$TMP/bud.lines"
+[ "$(wc -l < "$TMP/bud.lines")" = "20" ] || {
+  echo "FAIL: budgets.md must hold exactly 20 ceiling lines"
+  exit 1
+}
+CHECKS=$((CHECKS + 1))
+echo "ok: budgets-count"
+(cd "$ROOT/references/sources" && ls *.md | sed 's/\.md$//' | LC_ALL=C sort) \
+  > "$TMP/bud.cards"
+sed -E 's/^- ([A-Z]+):.*/\1/' "$TMP/bud.lines" > "$TMP/bud.sources"
+if diff -u "$TMP/bud.cards" "$TMP/bud.sources" > "$TMP/bud.diff"; then
+  CHECKS=$((CHECKS + 1))
+  echo "ok: budgets-coverage"
+else
+  echo "FAIL: budget sources differ from card set"
+  cat "$TMP/bud.diff"
+  exit 1
+fi
+sed -E 's/^- ([A-Z]+): ([0-9]+) .*/\1:\2/' "$TMP/bud.lines" > "$TMP/bud.vals"
+cat > "$TMP/bud.want" <<'EOF'
+ARXIV:40
+BASE:80
+CORE:60
+CROSSREF:60
+DOAJ:40
+EUROPEPMC:40
+GARUDA:60
+ISJD:20
+MORAREF:30
+NELITI:100
+ONESEARCH:60
+OPENAIRE:50
+OPENALEX:80
+PUBMED:60
+RAMA:40
+RESEARCHGATE:20
+SCHOLAR:12
+SEMANTICSCHOLAR:50
+SINTA:800
+UNPAYWALL:200
+EOF
+if diff -u "$TMP/bud.want" "$TMP/bud.vals" > "$TMP/bud.vdiff"; then
+  CHECKS=$((CHECKS + 1))
+  echo "ok: budgets-values"
+else
+  echo "FAIL: budget values differ from pinned policy"
+  cat "$TMP/bud.vdiff"
+  exit 1
+fi
+
 echo "ALL UNIT TESTS PASSED ($CHECKS checks)"

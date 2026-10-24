@@ -22,6 +22,9 @@
 - Detail page (fixed pattern): REPOSITORY INFO block (origin
   URL, platform, document count) + TITLE + institution +
   author + subject + datestamp + abstract.
+- Minimal curl: `curl -c jar -b jar -A '<UA>' <BASE>/` once
+  for the session cookie, then `curl -b jar --data-urlencode
+  'q=<TERMS>' --data-urlencode 'kondisi=2' <BASE>/search/all/`.
 - No public API.
 
 ## Identity & auth
@@ -61,6 +64,9 @@
   hidden; resolver 404 (lost archive file) = reject —
   Crossref-registered does not guarantee a live file; missing
   year in Crossref = reject.
+- Article-vs-homepage sniff: fetch the body and require an
+  article marker (`<meta name="citation_title">` or the DOI
+  string); a 200 without either is not an article page.
 - Author-matching RAMA-thesis -> Crossref-journal (same author,
   journal version) is an open research question, not an
   established claim — do not assert it without evidence.
