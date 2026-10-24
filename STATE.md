@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 1 — Cards batch 2 (11-15) done, uncommitted
-- status: 5 cards distilled, batch gate green; awaiting commit/next-batch order
+- phase: 1 — Cards batch 3 (16-20) done, uncommitted; Phase 1 complete pending commit
+- status: 20/20 cards distilled, batch gate green; awaiting batch 3 commit order
 - updated: 2026-10-25 (batch session)
 
 ## Next actions
@@ -19,8 +19,11 @@ memory a fresh session has.
 6. [x] Phase 1 batch 1: cards 6-10 (ARXIV, BASE, CORE, EUROPEPMC, ISJD) — gate green
 7. [x] Commit batch 1 (cae2c38, approved 2026-10-25)
 8. [x] Phase 1 batch 2: cards 11-15 (MORAREF, NELITI, ONESEARCH, OPENAIRE, PUBMED) — gate green
-9. [ ] Commit batch 2 (needs explicit approval)
-10. [ ] Phase 1 batch 3: cards 16-20 (RAMA, RESEARCHGATE, SEMANTICSCHOLAR, SINTA, UNPAYWALL)
+9. [x] Commit batch 2 (694bd59, approved 2026-10-25)
+10. [x] Phase 1 batch 3: cards 16-20 (RAMA, RESEARCHGATE, SEMANTICSCHOLAR, SINTA, UNPAYWALL) — gate green
+11. [ ] Commit batch 3 (needs explicit approval) — completes Phase 1 (cards 1-20)
+12. [ ] Publish-phase tech debt (see section below; due Phase 4)
+13. [ ] Phase 2: Runner UX (gate: blind foreign agent completes quota-3 on user docs alone)
 
 ## Card order (Phase 1)
 
@@ -50,6 +53,18 @@ memory a fresh session has.
 - 2026-10-25: batch 2 gate green — 5 cards (85/97/80/100/93 lines,
   OPENAIRE trimmed 103->100), zero origin-topic terms, no leaks;
   validate true/zero diagnostics, 24/24 tests.
+- 2026-10-25: batch 2 committed (694bd59, approved).
+- 2026-10-25: batch 3 gate green — 5 cards (94/92/92/99/96 lines,
+  SINTA trimmed 105->99), zero origin-topic terms, no leaks;
+  validate true/zero diagnostics, 24/24 tests. Phase 1 distillation
+  complete (20/20 cards); commit pending.
+
+## Tech debt (publish phase, due Phase 4)
+
+- SKILL.md frontmatter: add license/compatibility/metadata.
+- SKILL.md body: add harness support table.
+- README: cover install for 3 harnesses (Muse/OpenCode/Claude).
+- adapters/ stub must be filled or removed before publish.
 
 ## Decisions log
 
