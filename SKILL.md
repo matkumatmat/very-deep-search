@@ -1,6 +1,11 @@
 ---
 name: very-deep-search
 description: Multi-agent gather-and-verify pipeline for deep literature search: gather candidates from many sources in parallel, verify each through two independent layers with saved evidence, merge deterministically, adjudicate disagreements, and package a verifiable final set.
+license: MIT (pending human confirmation)
+compatibility: muse, opencode, claude
+metadata:
+  author: "AUTHOR_NAME"
+  scope: "gather-verify-pipeline"
 ---
 
 # Very Deep Search

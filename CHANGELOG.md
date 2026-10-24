@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased — publish hardening
+
+- `SKILL.md` frontmatter: `license`, `compatibility`
+  (muse/opencode/claude), `metadata`. License and author are
+  human decisions (`MIT (pending human confirmation)`,
+  `AUTHOR_NAME`).
+- `README.md`: per-harness install instructions with
+  verified-vs-expected labels, harness support matrix,
+  license line.
+- `CONTRIBUTING.md`: new-card end to end (template, 100-line
+  rule, budgets entry, blind mini-gate) plus PR and issue
+  templates under `.github/`.
+- `adapters/` stub removed: harness mapping now lives in
+  README Install + Harness support.
+- Clean-clone install verified on Muse Code and OpenCode;
+  Claude Code discovery expected, untested.
+
 ## 0.2.0 — Runner UX
 
 - `vds.py init`: scaffold a task directory with a byte-exact

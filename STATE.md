@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 3 — QA hardening
-- status: F3.1 PASS, 11/11 triaged (9 fix + 2 wontfix), gates green; Phase 3 commit PROPOSED
+- phase: 4 — Publish (content done, commit PROPOSED; push/tag/release are human gates)
+- status: publish brief executed; clean-clone Muse+OpenCode PASS, Claude partial; gates green
 - updated: 2026-10-25 (batch session)
 
 ## Standing constraints
@@ -36,7 +36,10 @@ memory a fresh session has.
 18. [x] Phase 3.1: cross-model blind test — PASS (attempt A only; B/C not triggered)
 19. [x] Phase 3.2: per-source request ceilings (budgets.md, 20/20) + compliance test; blind counts compliant (ARXIV 6/40, MORAREF 4/30, RAMA 4/40)
 20. [x] Phase 3.3: 11/11 confusion closed (9 fixed, 2 wontfix recorded below)
-21. [ ] Commit Phase 3 (PROPOSED, awaiting approval — see triage summary in gates log)
+21. [x] Commit Phase 3 (11745da, approved 2026-10-25)
+22. [x] Publish brief received and executed (P4.1-4.8)
+23. [ ] Commit publish content (PROPOSED, awaiting approval)
+24. [ ] Push/tag/release (HUMAN GATES — never auto-run)
 21. [ ] Publish-phase tech debt (see section below; due Phase 4)
 
 ## Card order (Phase 1)
@@ -153,13 +156,26 @@ memory a fresh session has.
 - ARXIV anti-bot verdict (non-negotiable) -> FIXED (API-clean vs
   publisher-landing split + skill 8 scoring rule).
 - MORAREF fallback-A example gap -> FIXED (ID-pointer line).
+- 2026-10-25: Phase 4 publish content done — frontmatter
+  (license/compatibility/metadata, validator-clean), README
+  3-harness install + matrix (verified/expected labeled),
+  CONTRIBUTING + .github templates, adapters/ removed,
+  clean-clone: Muse PASS (install/validate/57 tests/uninstall),
+  OpenCode PASS (symlink + live discovery), Claude placement
+  PASS with discovery expected-untested (no logged-in CLI);
+  all probe traces removed. CHANGELOG Unreleased. Gates:
+  validate true/zero diagnostics, 57/57, greps clean.
+  STOP: push/tag/release await explicit human approval.
 
-## Tech debt (publish phase, due Phase 4)
+## Tech debt (publish phase, due Phase 4) — RESOLVED 2026-10-25
 
-- SKILL.md frontmatter: add license/compatibility/metadata.
-- SKILL.md body: add harness support table.
-- README: cover install for 3 harnesses (Muse/OpenCode/Claude).
-- adapters/ stub must be filled or removed before publish.
+- [x] SKILL.md frontmatter: license/compatibility/metadata added.
+- [x] Harness support table added (in README, not SKILL body —
+  the skill ships zero external deps, so the body-table mandate
+  does not trigger; user reaches install docs first).
+- [x] README covers install for 3 harnesses (verified/expected labeled).
+- [x] adapters/ stub removed (one-line note in CHANGELOG + layout);
+  its stated purpose (harness mapping) now lives in README.
 
 ## Decisions log
 

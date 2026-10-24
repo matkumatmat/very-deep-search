@@ -7,19 +7,56 @@ adjudicate disagreements, and package a verifiable final set.
 
 ## Install
 
-From a clone of this repository:
+One artifact installs into all three harnesses. Replace
+`<path-to>` with your clone location. Labels say what was
+actually exercised here: `verified` ran end to end,
+`expected, untested` did not.
+
+Muse Code (verified):
 
 ```sh
-muse skills install <path-to>/very-deep-search
-```
-
-Then verify:
-
-```sh
+muse skills install <path-to>/very-deep-search --scope user
 muse skills validate <path-to>/very-deep-search --json
 ```
 
 Expected: `valid: true` with zero diagnostics and warnings.
+Remove with `muse skills uninstall very-deep-search`.
+
+OpenCode (verified):
+
+```sh
+ln -s <path-to>/very-deep-search ~/.agents/skills/very-deep-search
+ls ~/.agents/skills/very-deep-search/SKILL.md
+```
+
+Restart OpenCode; the skill appears in its skill list. (Verified:
+a fresh agent session listed it with the correct description.)
+
+Claude Code (symlink verified; discovery expected, untested —
+no logged-in CLI here to restart):
+
+```sh
+ln -s <path-to>/very-deep-search ~/.claude/skills/very-deep-search
+ls ~/.claude/skills/very-deep-search/SKILL.md
+```
+
+Restart Claude Code, then `/skills`.
+
+Link, do not copy: one directory linked into each tree, never
+three edited copies. Warning: Muse Code resolves
+`~/.claude/skills/` above `~/.agents/skills/` — if both hold
+the same id, the `~/.agents` copy is silently skipped.
+
+## Harness support
+
+| Harness | Skill install | Validate | Tests |
+| --- | --- | --- | --- |
+| Muse Code | verified (`muse skills install`) | verified (`muse skills validate`) | verified (`tests/run.sh`) |
+| OpenCode | verified (symlink + live discovery) | verified* (same validate via shell) | verified* (same `run.sh` via shell) |
+| Claude Code | expected, untested (placement OK; needs logged-in restart) | verified* (same validate via shell) | verified* (same `run.sh` via shell) |
+
+`*` Harness-independent: `vds.py` needs Python 3 (stdlib only)
+and `run.sh` needs `sh` — no harness agent involved.
 
 ## Quickstart (5 minutes)
 
@@ -82,12 +119,12 @@ An agent follows it top to bottom; no other reading order is needed.
 SKILL.md                  skill body (start here)
 README.md                 this file
 CHANGELOG.md              release history
+CONTRIBUTING.md           adding source cards, PR/issue templates
 scripts/vds.py            init + validate + merge + package (stdlib-only, offline)
 tests/                    fixtures + expected outputs + run.sh
 templates/                source-guide skeleton, record + manifest schemas
-references/sources/       per-source protocol cards (20)
+references/               per-source protocol cards (20) + request budgets
 examples/                 filled input-contract example + quota-3 demo
-adapters/                 future non-Muse harness notes (stub)
 ```
 
 ## Validity rule
@@ -95,3 +132,8 @@ adapters/                 future non-Muse harness notes (stub)
 A `pass` claim is valid if and only if the user can reproduce it with
 the recorded `reverify` commands against the saved `evidence_ref`
 artifact. No evidence = not counted.
+
+## License
+
+MIT (pending human confirmation). Author placeholder: see
+`AUTHOR_NAME` in `SKILL.md` frontmatter — the human decides.
