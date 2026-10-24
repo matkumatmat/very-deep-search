@@ -1,3 +1,3 @@
-{"bytes": 12, "evidence_quote": "key finding supports I1", "filename": "p1.txt", "identifier": "10.0000/pkg.1", "reason": "full text verifies the claim", "source_url": "https://example.org/pkg/1", "verdict": "relevant"}
-{"bytes": 14, "filename": "p2.txt", "identifier": "10.0000/pkg.2", "reason": "full text verifies the claim", "source_url": "https://example.org/pkg/2", "verdict": "relevant"}
+{"bytes": 12, "evidence_quote": "key finding supports I1", "filename": "p1.txt", "identifier": "10.0000/pkg.1", "reason": "full text verifies the claim", "source_url": "https://example.org/pkg/1", "tier": "A", "verdict": "relevant"}
+{"bytes": 14, "filename": "p2.txt", "identifier": "10.0000/pkg.2", "reason": "metadata snapshot only tier-b-block: fixture paywall.", "source_url": "https://example.org/pkg/2", "tier": "B", "verdict": "relevant"}
 {"bytes": "download_failed", "filename": "p9.pdf", "identifier": "10.0000/pkg.9", "reason": "host timeout on two attempts", "source_url": "https://example.org/pkg/9", "verdict": "download_failed"}

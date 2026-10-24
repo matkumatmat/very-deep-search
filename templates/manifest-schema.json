@@ -27,6 +27,11 @@
       "description": "URL the artifact was fetched from (with fallback chain on failure).",
       "type": "string"
     },
+    "tier": {
+      "description": "Content tier. Required except on download_failed rows (enforced by vds.py): A needs a non-empty evidence_quote; B needs tier-b-block cause in reason.",
+      "enum": ["A", "B"],
+      "type": "string"
+    },
     "text_chars": {
       "description": "Extracted-text length when content was verified, else null.",
       "type": ["integer", "null"]

@@ -9,6 +9,7 @@
   "inclusion": [
     "I1: studies that test or discuss the topic against outcomes measured at the work-unit level (unit, division, branch, or organization acting as a unit), with data."
   ],
+  "min_tier_a": 3,
   "over_gather_ratio": 1.5,
   "quota": {
     "per_source": 2,

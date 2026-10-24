@@ -1,6 +1,22 @@
 # Changelog
 
-## Unreleased — publish hardening
+## Unreleased — artifact tiers (Phase 5)
+
+- Content tiers: every pass row carries `tier` (`"A"` = full
+  text retrieved with a relevance quote, `"B"` = metadata-only
+  with a `tier-b-block:` cause). A saved abstract alone is
+  Tier B: abstracts screen, only full text verifies.
+- Contract `min_tier_a` (`vds.py init --min-tier-a`, default:
+  quota total — quota counts Tier A unless explicitly
+  lowered); `vds.py package` refuses Tier-A shortfalls.
+- Enforcement: `validate` checks tier labels + block tokens;
+  `package` checks Tier-A quotes + quota. BREAKING at
+  validation: pre-tier lane files fail until migrated (add
+  tier labels; the demo shows the Tier-B pattern).
+- Demo migrated to documented all-Tier-B (`min_tier_a: 0`).
+- Tests: 57 → 72 checks, all offline.
+
+## 1.0.0 — publish hardening
 
 - `SKILL.md` frontmatter: `license`, `compatibility`
   (muse/opencode/claude), `metadata`. License MIT, author
@@ -15,6 +31,7 @@
   README Install + Harness support.
 - Clean-clone install verified on Muse Code and OpenCode;
   Claude Code discovery expected, untested.
+- Author + MIT license (human-confirmed).
 
 ## 0.2.0 — Runner UX
 

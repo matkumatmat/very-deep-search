@@ -104,6 +104,15 @@ def validate_record(obj, root):
                 errors.append("evidence file not found: %s" % (rel,))
             elif os.path.getsize(full) == 0:
                 errors.append("evidence file is empty: %s" % (rel,))
+        tier = obj.get("tier")
+        if tier not in ("A", "B"):
+            errors.append('pass requires tier "A" or "B"')
+        elif tier == "B":
+            rsn = obj.get("reason", "")
+            if not isinstance(rsn, str) or "tier-b-block:" not in rsn.lower():
+                errors.append(
+                    'tier B rows must state "tier-b-block: <cause>" in reason'
+                )
     return errors
 
 
@@ -365,12 +374,24 @@ def cmd_init(args):
         return 2
     if per_source is None:
         per_source = -(-args.quota // len(sources))
+    min_tier_a = args.min_tier_a
+    if min_tier_a is None:
+        min_tier_a = args.quota
+    if (
+        isinstance(min_tier_a, bool)
+        or not isinstance(min_tier_a, int)
+        or min_tier_a < 0
+        or min_tier_a > args.quota
+    ):
+        sys.stdout.write("init: min-tier-a must be between 0 and quota\n")
+        return 2
     contract = {
         "topic": topic,
         "inclusion": inclusion,
         "exclusion": exclusion,
         "source_registry": sources,
         "quota": {"total": args.quota, "per_source": per_source},
+        "min_tier_a": min_tier_a,
         "over_gather_ratio": args.over_gather,
         "verification_contract": {
             "layer1": args.l1.strip() if args.l1 else DEFAULT_L1,
@@ -469,6 +490,18 @@ def validate_manifest_row(obj, ev_dir):
                 'download_failed verdict requires bytes "download_failed"'
             )
         return errors
+    tier = obj.get("tier")
+    if tier not in ("A", "B"):
+        errors.append('manifest rows must carry tier "A" or "B"')
+    elif tier == "A":
+        if not isinstance(quote, str) or not quote.strip():
+            errors.append("tier A rows must carry a non-empty evidence_quote")
+    elif tier == "B":
+        rsn = obj.get("reason", "")
+        if not isinstance(rsn, str) or "tier-b-block:" not in rsn.lower():
+            errors.append(
+                'tier B rows must state "tier-b-block: <cause>" in reason'
+            )
     fname = obj["filename"]
     if not isinstance(fname, str) or safe_rel(fname) is None:
         errors.append("filename must be a relative path inside the evidence dir")
@@ -565,6 +598,7 @@ def package_readme(contract, counts, files, missing):
     lines.append("## Counts")
     lines.append("")
     lines.append("final pass records: %d" % (counts["final_pass"],))
+    lines.append("Tier-A passes: %d" % (counts["tier_a"],))
     lines.append("manifest rows: %d" % (counts["manifest"],))
     lines.append("evidence files: %d" % (counts["evidence"],))
     lines.append("")
@@ -638,6 +672,7 @@ def cmd_package(args):
         final_rows = []
     pass_ids = set()
     pass_evidence = set()
+    tier_a_ids = set()
     for _, obj in final_rows:
         if not isinstance(obj, dict):
             continue
@@ -645,6 +680,8 @@ def cmd_package(args):
             continue
         if is_nonempty_str(obj.get("identifier", "")):
             pass_ids.add(norm_key(obj["identifier"]))
+            if obj.get("tier") == "A":
+                tier_a_ids.add(norm_key(obj["identifier"]))
         rel = obj.get("evidence_ref", "")
         if isinstance(rel, str) and rel.strip():
             pass_evidence.add(rel.strip())
@@ -654,6 +691,32 @@ def cmd_package(args):
             % (args.manifest, key)
         )
         total_err += 1
+    if isinstance(contract, dict):
+        min_a = contract.get("min_tier_a")
+        if min_a is None:
+            quota = contract.get("quota", {})
+            if isinstance(quota, dict) and isinstance(
+                quota.get("total"), int
+            ):
+                min_a = quota["total"]
+            else:
+                min_a = len(pass_ids)
+        if (
+            isinstance(min_a, bool)
+            or not isinstance(min_a, int)
+            or min_a < 0
+        ):
+            out_lines.append(
+                "%s: min_tier_a must be a non-negative integer"
+                % (args.contract,)
+            )
+            total_err += 1
+        elif len(tier_a_ids) < min_a:
+            out_lines.append(
+                "tier-a shortfall: %d Tier-A passes < min_tier_a %d"
+                % (len(tier_a_ids), min_a)
+            )
+            total_err += 1
     copies = []
     optionals = {
         "contract.json": args.contract,
@@ -730,6 +793,7 @@ def cmd_package(args):
         payloads[dest] = data
     counts = {
         "final_pass": len(pass_ids),
+        "tier_a": len(tier_a_ids),
         "manifest": len(manifest_rows),
         "evidence": len(
             [d for d in payloads if d != "final.jsonl"
@@ -760,11 +824,12 @@ def cmd_package(args):
         "\n".join(
             out_lines
             + [
-                "package: final=%d manifest=%d evidence=%d -> %s"
+                "package: final=%d manifest=%d evidence=%d tier_a=%d -> %s"
                 % (
                     counts["final_pass"],
                     counts["manifest"],
                     counts["evidence"],
+                    counts["tier_a"],
                     out_dir,
                 )
             ]
@@ -798,6 +863,10 @@ def build_parser():
     p_init.add_argument(
         "--per-source", type=int, default=None,
         help="per-source target (default: quota split across sources)",
+    )
+    p_init.add_argument(
+        "--min-tier-a", type=int, default=None,
+        help="minimum Tier-A passes (default: quota total)",
     )
     p_init.add_argument(
         "--over-gather", type=float, default=OVER_GATHER_DEFAULT,

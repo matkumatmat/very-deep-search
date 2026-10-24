@@ -1,0 +1,1 @@
+{"min_tier_a": 1, "over_gather_ratio": 1.5, "quota": {"per_source": 1, "total": 2}, "source_registry": ["TEST"], "topic": "package test"}

@@ -80,6 +80,8 @@
 
 - Narrow: `query="<PHRASE>" AND "<PHRASE>"&format=json
   &pageSize=25&resultType=core` (URL-encoded).
+- Bare terms also AND: `query=<T1> AND <T2> AND <T3>` needs
+  no field prefix (Lucene-style).
 - Over-gather: `TITLE_ABS:"<PHRASE>" AND <CONTEXT>`; screen
   top-N, then 2-layer curl per DOI shortlist.
 

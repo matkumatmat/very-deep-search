@@ -37,6 +37,11 @@
       "description": "Landing/content URL where the item was found.",
       "type": "string"
     },
+    "tier": {
+      "description": "Content tier. Required for pass rows (enforced by vds.py): A = full text retrieved with a relevance quote; B = metadata-only, with tier-b-block cause in reason.",
+      "enum": ["A", "B"],
+      "type": "string"
+    },
     "title": {
       "description": "Item title.",
       "type": "string"

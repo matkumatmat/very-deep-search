@@ -35,6 +35,9 @@ Do not start gathering until all of these are fixed:
 - `source_registry`: list of sources. Each source needs a protocol card
   (see §4) before it is gathered.
 - `quota`: total target plus per-lane/per-source targets.
+- `min_tier_a`: minimum Tier-A passes (default: quota total).
+  Quota counts Tier A only unless the contract explicitly
+  lowers this — document the choice either way.
 - `over_gather_ratio`: default 1.5x quota (attrition from anti-bot and
   dead identifiers is normal, not failure).
 - `verification_contract`: the domain's Layer 1 (locator resolution) and
@@ -58,13 +61,24 @@ Do not start gathering until all of these are fixed:
    dedup. Subagents never write lane files directly.
 4. **Content pass**: download/read the underlying content for each `pass`
    record; verify the content matches the claim; store artifacts plus a
-   short evidence quote (max 300 chars) in a manifest. Minimum
-   artifact: the full text when reachable (PDF or extracted text);
-   when the full text is inaccessible but the landing body carries
-   article markers and authoritative metadata confirms the claim, a
-   trimmed metadata snapshot plus the body-marker note is acceptable —
-   label which kind each manifest row holds in its reason. Failures
-   are classified (`download_failed` + reason), never forced.
+   short evidence quote (max 300 chars) in a manifest. Every pass row
+   carries a content tier: **Tier A** (full text retrieved — PDF or
+   extracted article text — plus a mandatory relevance quote from
+   that text showing the inclusion-criteria match, saved under
+   `evidence/` and cited by the record) or **Tier B**
+   (metadata-only: allowed only when full text is genuinely
+   unreachable — paywall, 403, dead archive — labeled as such in
+   `reason` with `tier-b-block: <cause>`, never counted as
+   content-verified). A saved abstract alone is Tier B, not Tier A:
+   abstracts screen candidates, only full text verifies them.
+   Manifest row schema: `identifier`, `filename` (basename
+   relative to the evidence dir), `bytes` (integer file size, or
+   `"download_failed"`), `source_url`, `verdict` (one of
+   `relevant|not_relevant|download_failed`), `reason`, `tier`
+   (`"A"`/`"B"`, required except on `download_failed` rows),
+   optional `evidence_quote` (max 300 chars; mandatory on Tier A).
+   Failures are classified (`download_failed` + reason), never
+   forced.
 5. **Global merge + gate**: validate schema of every lane file, then
    merge with deterministic keep-order into `merged.jsonl` (all `pass`
    rows — use the tool's pass-only mode). `final.jsonl` is NOT tool
@@ -139,6 +153,8 @@ screened before probing, `layer1_status` is `"not_run"` and
 `layer1_status` for `pass` is the observed success (`200`, or an
 equivalent success string such as `"200-ok"`); for `reject` it is
 the observed failure (`404`, `403`, a challenge note) or `"not_run"`.
+`pass` rows also carry `tier` (`"A"`/`"B"`); Tier-B rows state
+`tier-b-block: <cause>` in `reason`.
 
 ## 6. Orchestration
 
@@ -214,9 +230,10 @@ Title-only records (no abstract/content) carry low confidence.
 - `merged.jsonl`: every passing record with verdicts (all lanes).
 - `final.jsonl`: the proof-backed subset (content artifacts verified).
 - `excluded-from-final.md`: merged-but-not-final rows with reasons.
-- `needs-richer-check.jsonl`: queued items, one row each
-  (`identifier`, `reason`, `queued_by`, `status`: one of
-  queued/promoted/dropped).
+- `needs-richer-check.jsonl`: empty file when the queue is empty,
+  else one JSON object per line (`identifier`, `reason`,
+  `queued_by`, `status`: one of queued/promoted/dropped).
+  A JSON array (`[]`) is not valid JSONL — leave the file empty.
 - Manifest: one row per artifact (identifier, filename, source URL,
   size, evidence quote, verdict).
 - Excluded-with-reasons file for adjudicated disputes.
@@ -231,15 +248,17 @@ deterministic):
 
 - `vds.py init <task-dir> --topic <t> --quota <n>
   --sources <a,b> [--per-source <n>] [--over-gather <r>]
-  [--inclusion <c>]... [--exclusion <c>]... [--l1 <t>] [--l2 <t>]
-  [--evidence-budget <t>] [--force]`: writes `contract.json`
-  (byte-exact for the same arguments) plus `workspace/` and
-  `evidence/`; journal-domain defaults, overridable. Refuses an
-  existing contract without `--force`. Exit 0 ok, 1 refused,
-  2 bad usage.
+  [--min-tier-a <n>] [--inclusion <c>]... [--exclusion <c>]...
+  [--l1 <t>] [--l2 <t>] [--evidence-budget <t>] [--force]`:
+  writes `contract.json` (byte-exact for the same arguments)
+  plus `workspace/` and `evidence/`; journal-domain defaults,
+  overridable. Refuses an existing contract without `--force`.
+  Exit 0 ok, 1 refused, 2 bad usage.
 - `vds.py validate <files...>`: schema, decision enum, identifier
-  format, intra-file dedup, mandatory evidence + reverify for `pass`.
-  Exit 0 clean, 1 errors found, 2 bad usage.
+  format, intra-file dedup, mandatory evidence + reverify for `pass`,
+  tier labels (`"A"`/`"B"` required on pass; Tier B needs the
+  `tier-b-block:` cause in reason). Exit 0 clean, 1 errors found,
+  2 bad usage.
 - `vds.py merge LANE=PATH ... --keep-order <lanes> -o <out>
   [--report <file>] [--pass-only]`: validates first (invalid input
   refuses the merge), global dedup with deterministic keep-order,
@@ -253,10 +272,13 @@ deterministic):
   [--evidence-dir <dir>] [--force]`: validates final (+ merged,
   manifest rows, needs rows), requires one manifest row per final
   `pass` identifier, then assembles the package (copies +
-  evidence + generated README). Any error refuses the package
-  and writes nothing. Refuses a non-empty output dir without
-  `--force`. All bracketed flags are optional; omitted files are
-  listed as not provided in the generated README.
+  evidence + generated README). Tier checks: manifest Tier-A rows
+  need a non-empty quote, Tier-B rows need the block cause, and
+  Tier-A finals must meet the contract `min_tier_a` (default:
+  quota total). Any error refuses the package and writes
+  nothing. Refuses a non-empty output dir without `--force`.
+  All bracketed flags are optional; omitted files are listed
+  as not provided in the generated README.
   Exit 0 ok, 1 errors found, 2 bad usage.
 
 Example:

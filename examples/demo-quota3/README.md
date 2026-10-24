@@ -10,6 +10,12 @@ artifacts are redacted to verdict-supporting fields only.
 Topic and records are illustration, not a literature review:
 do not cite this demo as coverage of the topic.
 
+Tiers: all 3 records are Tier B (metadata snapshots, no full
+text) and the contract sets `min_tier_a: 0` to document that
+choice — quota normally counts Tier A only (see SKILL.md
+section 3, stage 4). The replay therefore also proves that a
+documented all-Tier-B package assembles cleanly.
+
 ## Replay (offline, no network)
 
 From the repository root:

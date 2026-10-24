@@ -5,9 +5,15 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 4 — Published repo created; STOPPED before push/tag/release
-- status: 7285c4f committed; github.com/matkumatmat/very-deep-search PUBLIC exists (empty); push/tag/release await human
+- phase: 5 — Tier extension landed; batch A retrofitted; batches B/C run native next
+- status: tiers implemented + gates green; P5-EXT replying; batch B/C briefs must require native tiers
 - updated: 2026-10-25 (batch session)
+
+## Phase 6 candidate (recorded, NOT this phase)
+
+- Serious-user pipeline: gathered PDFs × model-based relevance
+  quantification scored against the user context from abstracts.
+  Logged per human order 2026-10-25; design not started.
 
 ## Standing constraints
 
@@ -37,7 +43,12 @@ memory a fresh session has.
 19. [x] Phase 3.2: per-source request ceilings (budgets.md, 20/20) + compliance test; blind counts compliant (ARXIV 6/40, MORAREF 4/30, RAMA 4/40)
 20. [x] Phase 3.3: 11/11 confusion closed (9 fixed, 2 wontfix recorded below)
 21. [x] Commit Phase 3 (11745da, approved 2026-10-25)
-22. [x] Publish brief received and executed (P4.1-4.8)
+22. [x] Publish brief received and executed (P4.1-4.8); P4 committed affc6b7; repo created; main pushed; v1.0.0 tagged+pushed (all human-approved; no release)
+23. [x] P5 batch A: blind-verify BASE/CORE/EUROPEPMC/PUBMED — 4/4 PASS, 5/5 confusion fixed, retrofitted to tiers
+24. [ ] P5 batch B: blind-verify ISJD/NELITI/ONESEARCH/SINTA (NATIVE tier schema)
+25. [ ] P5 batch C: blind-verify OPENAIRE/RESEARCHGATE/SEMANTICSCHOLAR/UNPAYWALL (NATIVE tier schema)
+26. [ ] support-matrix.md complete (tier column added; batch-A rows filled)
+27. [ ] Commit tier extension + batch A (PROPOSE with P5-EXT, await approval each time)
 23. [x] Commit publish content (affc6b7, approved 2026-10-25)
 24. [ ] Push/tag/release + author/license fill (HUMAN GATES — never auto-run)
 21. [ ] Publish-phase tech debt (see section below; due Phase 4)
@@ -156,6 +167,25 @@ memory a fresh session has.
 - ARXIV anti-bot verdict (non-negotiable) -> FIXED (API-clean vs
   publisher-landing split + skill 8 scoring rule).
 - MORAREF fallback-A example gap -> FIXED (ID-pointer line).
+- 2026-10-25: P5 batch A graded — 4/4 PASS (BASE/CORE/EUROPEPMC/
+  PUBMED quota-1, all vds exit 0, package valid, 4/4 reverify
+  reproduced independently, leak audit clean, counts compliant).
+  5/5 confusion fixed (manifest schema, needs format, BASE/CORE
+  fallback clarity, EUROPEPMC example). Observations (no doc
+  change): 0 reject rows written; BASE/CORE fallback proxy not
+  noted in reasons (docs already require both).
+- 2026-10-25: TIER DESIGN LANDED — real `tier` field (A/B) on
+  pass rows + manifest rows (download_failed exempt); Tier A
+  needs full text + non-empty quote (abstracts alone are Tier B);
+  Tier B needs `tier-b-block:` cause in reason (prescribed token,
+  like the not_run precedent); contract `min_tier_a` (default
+  quota total); package refuses shortfalls; fixtures + demo
+  migrated explicitly (demo = documented all-B, min_tier_a 0);
+  tests 57->72. Choices: migration over backward-compat (old
+  lanes fail loudly until labeled — honest); strict abstract=B.
+  Batch A retrofitted from saved evidence only (all Tier B,
+  title quotes cited to evidence files) into
+  /tmp/p5a/work/air-pollution-asthma-retro + RETROFIT.md.
 - 2026-10-25: Phase 4 publish content done — frontmatter
   (license/compatibility/metadata, validator-clean), README
   3-harness install + matrix (verified/expected labeled),

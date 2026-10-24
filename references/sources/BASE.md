@@ -72,12 +72,14 @@
 
 ## Fallback chain
 
-- Dorking: `site:base-search.net/Record "<TERMS>"` to find
-  canonical Record pages (pointers only — metadata and
-  verification still go through the backbone).
+- Dorking: `site:base-search.net/Record "<TERMS>"` finds
+  canonical Record pages (pointers only, backbone verifies).
 - Discovery mirror: Crossref (the same DOI corpus BASE
   harvests), with each unconfirmed record flagged
   `needs_richer_check` for later Record-page confirmation.
+  Without registration this keyless path is the intended one:
+  run Crossref discovery + standard 2-layer verification,
+  flag unconfirmed records, never stall waiting for access.
 - Browser pass: confirm `/Record/` indexing for shortlisted DOIs.
 
 ## Retry budget

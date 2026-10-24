@@ -75,11 +75,9 @@
   Semantic Scholar / Crossref; (2) CORE membership proof from
   the search-engine index (`site:core.ac.uk`, `"<title>"
   core.ac.uk`); (3) 2-layer curl verification per DOI.
-  This puts zero load on CORE and is HTTP-reproducible except
-  for the guarded CORE fetch itself.
-- Keep CORE diagnostic probes minimal (root/search/outputs once
-  each); discovery queries must be specific per title, never a
-  crawl.
+  Skipping tier (2) is acceptable when L1+L2 pass on the DOI
+  directly — note the skip in `reason`. Probes minimal: root /
+  search / outputs once each; per-title queries, never a crawl.
 
 ## Retry budget
 

@@ -48,7 +48,7 @@ OUT="$("$VDS" validate "$FIX/invalid.jsonl" --root "$TMP")"
 CODE=$?
 for pat in "invalid JSON" "missing field" "decision must be" \
   "whitespace" "must be boolean" "non-empty reverify" "not found" \
-  "duplicate identifier" "empty"; do
+  "duplicate identifier" "empty" 'tier "A" or "B"'; do
   need "validate-dirty:$pat" "$pat" "$OUT"
 done
 check "validate-dirty-exit" 1 "$CODE"
@@ -165,11 +165,11 @@ mkdir -p "$TMP/evidence"
 printf 'proof-alpha\n' > "$TMP/evidence/p1.txt"
 printf 'proof-beta-ok\n' > "$TMP/evidence/p2.txt"
 OUT="$("$VDS" package --final "$FIX/pkg-final.jsonl" \
-  --manifest "$FIX/pkg-manifest.jsonl" --contract "$TMP/task1/contract.json" \
+  --manifest "$FIX/pkg-manifest.jsonl" --contract "$FIX/pkg-contract.json" \
   --merged "$TMP/merged-po.jsonl" --excluded "$FIX/pkg-excluded.md" \
   --needs-richer "$FIX/pkg-needs.jsonl" --root "$TMP" -o "$TMP/pkg")"
 check "package-exit" 0 "$?"
-need "package-summary" "final=2 manifest=3 evidence=2" "$OUT"
+need "package-summary" "final=2 manifest=3 evidence=2 tier_a=1" "$OUT"
 (cd "$TMP/pkg" && find . -type f | LC_ALL=C sort) > "$TMP/pkg.files"
 cat > "$TMP/pkg.want" <<'EOF'
 ./README.md
@@ -190,7 +190,8 @@ else
   cat "$TMP/pkg.diff"
   exit 1
 fi
-need "package-readme-topic" "widgets and gadgets" "$(cat "$TMP/pkg/README.md")"
+need "package-readme-topic" "package test" "$(cat "$TMP/pkg/README.md")"
+need "package-readme-tiera" "Tier-A passes: 1" "$(cat "$TMP/pkg/README.md")"
 need "package-readme-missing" "Not provided: disputes.md" "$(cat "$TMP/pkg/README.md")"
 
 # 11. packaged final re-validates self-contained inside the package
@@ -200,7 +201,7 @@ need "package-selfcontained-counts" "pass=2 reject=0 duplicates=0 errors=0" "$OU
 
 # 12. package is byte-deterministic across runs
 "$VDS" package --final "$FIX/pkg-final.jsonl" \
-  --manifest "$FIX/pkg-manifest.jsonl" --contract "$TMP/task1/contract.json" \
+  --manifest "$FIX/pkg-manifest.jsonl" --contract "$FIX/pkg-contract.json" \
   --merged "$TMP/merged-po.jsonl" --excluded "$FIX/pkg-excluded.md" \
   --needs-richer "$FIX/pkg-needs.jsonl" --root "$TMP" -o "$TMP/pkg2" > /dev/null
 if diff -r "$TMP/pkg" "$TMP/pkg2" > /dev/null; then
@@ -319,5 +320,39 @@ else
   cat "$TMP/bud.vdiff"
   exit 1
 fi
+
+# 19. tiers: validate enforces tier labels, package enforces quota + quotes
+printf '{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0/t1", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": ["curl https://example.org/t1"], "source_url": "https://example.org/t1", "title": "T"}\n' > "$TMP/notier.jsonl"
+OUT="$("$VDS" validate "$TMP/notier.jsonl" --root "$TMP")"
+check "tier-missing-exit" 1 "$?"
+need "tier-missing-msg" 'tier "A" or "B"' "$OUT"
+printf '{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0/t2", "layer1_status": 200, "layer2_match": true, "reason": "R", "reverify": ["curl https://example.org/t2"], "source_url": "https://example.org/t2", "tier": "C", "title": "T"}\n' > "$TMP/badtier.jsonl"
+OUT="$("$VDS" validate "$TMP/badtier.jsonl" --root "$TMP")"
+check "tier-badvalue-exit" 1 "$?"
+printf '{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0/t3", "layer1_status": 200, "layer2_match": true, "reason": "R without token", "reverify": ["curl https://example.org/t3"], "source_url": "https://example.org/t3", "tier": "B", "title": "T"}\n' > "$TMP/bnotoken.jsonl"
+OUT="$("$VDS" validate "$TMP/bnotoken.jsonl" --root "$TMP")"
+check "tier-bnotoken-exit" 1 "$?"
+need "tier-bnotoken-msg" "tier-b-block:" "$OUT"
+printf '{"decision": "pass", "evidence_ref": "ev/ok.txt", "identifier": "10.0/t4", "layer1_status": 200, "layer2_match": true, "reason": "R tier-b-block: paywall.", "reverify": ["curl https://example.org/t4"], "source_url": "https://example.org/t4", "tier": "B", "title": "T"}\n' > "$TMP/bok.jsonl"
+OUT="$("$VDS" validate "$TMP/bok.jsonl" --root "$TMP")"
+check "tier-bok-exit" 0 "$?"
+printf '{"bytes": 12, "filename": "p1.txt", "identifier": "10.0000/pkg.1", "reason": "full text", "source_url": "https://example.org/pkg/1", "tier": "A", "verdict": "relevant"}\n' > "$TMP/noquote-manifest.jsonl"
+OUT="$("$VDS" package --final "$FIX/pkg-final.jsonl" \
+  --manifest "$TMP/noquote-manifest.jsonl" --root "$TMP" -o "$TMP/pkgnoq")"
+check "tier-a-noquote-exit" 1 "$?"
+need "tier-a-noquote-msg" "non-empty evidence_quote" "$OUT"
+printf '{"min_tier_a": 2, "quota": {"per_source": 1, "total": 2}, "source_registry": ["TEST"], "topic": "shortfall"}\n' > "$TMP/min2.json"
+OUT="$("$VDS" package --final "$FIX/pkg-final.jsonl" \
+  --manifest "$FIX/pkg-manifest.jsonl" --contract "$TMP/min2.json" \
+  --root "$TMP" -o "$TMP/pkgshort")"
+check "tier-shortfall-exit" 1 "$?"
+need "tier-shortfall-msg" "tier-a shortfall: 1 Tier-A passes < min_tier_a 2" "$OUT"
+"$VDS" init "$TMP/t4" --topic "x" --quota 4 --sources A,B --min-tier-a 1 \
+  > /dev/null
+check "init-mintiera-exit" 0 "$?"
+need "init-mintiera-val" '"min_tier_a": 1' "$(cat "$TMP/t4/contract.json")"
+"$VDS" init "$TMP/t5" --topic "x" --quota 2 --sources A --min-tier-a 3 \
+  > /dev/null 2>&1
+check "init-mintiera-bad-exit" 2 "$?"
 
 echo "ALL UNIT TESTS PASSED ($CHECKS checks)"

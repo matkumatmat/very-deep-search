@@ -21,6 +21,7 @@ Not provided: disputes.md.
 ## Counts
 
 final pass records: 3
+Tier-A passes: 0
 manifest rows: 3
 evidence files: 3
 
