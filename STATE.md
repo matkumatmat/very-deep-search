@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 4 — Publish content committed; author/license filled, awaiting commit approval
-- status: placeholders filled (matkumatmat/MIT + LICENSE); repo-create approved, runs after commit; push/tag/release still gated
+- phase: 4 — Published repo created; STOPPED before push/tag/release
+- status: 7285c4f committed; github.com/matkumatmat/very-deep-search PUBLIC exists (empty); push/tag/release await human
 - updated: 2026-10-25 (batch session)
 
 ## Standing constraints
