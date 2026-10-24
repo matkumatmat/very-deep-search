@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 0 — Bootstrap, closing (Batch 0 ordered before commit)
-- status: .gitignore in place, dev-corpus/ ignored; initial commit approved, running next
+- phase: 1 — Cards batch 1 (6-10) done, uncommitted
+- status: 5 cards distilled, batch gate green; awaiting commit/next-batch order
 - updated: 2026-10-25 (batch session)
 
 ## Next actions
@@ -15,8 +15,10 @@ memory a fresh session has.
 2. [x] Run Phase 0 gates in final location — green 2026-10-25
 3. [x] Batch 0: read dev-corpus/README.md, obey rules (distill-only input, never commit)
 4. [x] Batch 0: .gitignore with dev-corpus/ (verified via check-ignore)
-5. [ ] git add + initial commit (APPROVED by user 2026-10-25, after .gitignore)
-6. [ ] Phase 1 batch 1: cards 6-10 (ARXIV, BASE, CORE, EUROPEPMC, ISJD)
+5. [x] git add + initial commit (163fed7, 27 files, dev-corpus/ excluded)
+6. [x] Phase 1 batch 1: cards 6-10 (ARXIV, BASE, CORE, EUROPEPMC, ISJD) — gate green
+7. [ ] Commit batch 1 (needs explicit approval — initial-commit approval did not cover this)
+8. [ ] Phase 1 batch 2: cards 11-15 (MORAREF, NELITI, ONESEARCH, OPENAIRE, PUBMED)
 
 ## Card order (Phase 1)
 
@@ -38,6 +40,10 @@ memory a fresh session has.
 - 2026-10-25: Batch 0 — dev-corpus/ present (20 sources x 5 files),
   rules read; .gitignore created, check-ignore confirms
   dev-corpus/README.md ignored.
+- 2026-10-25: initial commit 163fed7 (27 files, dev-corpus/ excluded).
+- 2026-10-25: batch 1 gate green — 5 cards (84/98/99/88/78 lines,
+  all sections, canonical+dead domains), zero origin-topic terms,
+  no paths/emails/tokens; validate true/zero diagnostics, 24/24 tests.
 
 ## Decisions log
 
