@@ -1,0 +1,26 @@
+{
+  "evidence_budget": "one staging row + one evidence artifact per claim; trim raw dumps to verdict-supporting fields.",
+  "exclusion": [
+    "E1: individual-level outcomes, even when the title names the topic.",
+    "E2: opinion pieces without data.",
+    "E3: duplicate identifiers (keep first by keep-order).",
+    "E4: identifiers failing two-layer verification."
+  ],
+  "inclusion": [
+    "I1: studies that test or discuss the topic against outcomes measured at the work-unit level (unit, division, branch, or organization acting as a unit), with data."
+  ],
+  "over_gather_ratio": 1.5,
+  "quota": {
+    "per_source": 2,
+    "total": 3
+  },
+  "source_registry": [
+    "CROSSREF",
+    "OPENALEX"
+  ],
+  "topic": "widgets and gadgets",
+  "verification_contract": {
+    "layer1": "doi.org/<ID> must end HTTP 200 at the article landing page with article markers; challenge, login, or empty bodies fail.",
+    "layer2": "api.crossref.org/works/<ID> title + year must match the candidate."
+  }
+}

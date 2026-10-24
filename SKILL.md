@@ -53,14 +53,20 @@ Do not start gathering until all of these are fixed:
    dedup. Subagents never write lane files directly.
 4. **Content pass**: download/read the underlying content for each `pass`
    record; verify the content matches the claim; store artifacts plus a
-   short evidence quote (max 300 chars) in a manifest. Failures are
-   classified (`download_failed` + reason), never forced.
+   short evidence quote (max 300 chars) in a manifest. Minimum
+   artifact: the full text when reachable (PDF or extracted text);
+   when the full text is inaccessible but the landing body carries
+   article markers and authoritative metadata confirms the claim, a
+   trimmed metadata snapshot plus the body-marker note is acceptable —
+   label which kind each manifest row holds in its reason. Failures
+   are classified (`download_failed` + reason), never forced.
 5. **Global merge + gate**: validate schema of every lane file, then
-   merge with deterministic keep-order into two artifacts: `merged.jsonl`
-   (all `pass` rows — use the tool's pass-only mode) and `final.jsonl`
-   (the proof-backed subset whose content artifacts verified relevant;
+   merge with deterministic keep-order into `merged.jsonl` (all `pass`
+   rows — use the tool's pass-only mode). `final.jsonl` is NOT tool
+   output: you hand-write it during the content pass as the
+   proof-backed subset whose content artifacts verified relevant;
    rows in merged-but-not-final are listed with reasons in
-   `excluded-from-final.md`). Rejects stay in lane files as coverage
+   `excluded-from-final.md`. Rejects stay in lane files as coverage
    proof. Re-resolve a cross-sample of identifiers the merger never
    checked; inline, where gatherer and merger are the same agent,
    re-resolve a small sample yourself and label it as such. Any flip
@@ -101,7 +107,9 @@ not recorded is marked `not recorded` — never invented.
 One JSON object per line. Generic field names; instantiate per domain:
 
 - `identifier`: the canonical ID, lowercase-normalized for dedup.
-- `title`, `source_url`, plus domain metadata fields.
+- `title`, `source_url`, plus domain metadata fields. Record the
+  canonical `source_url`: strip session/query params the site appends
+  per resolve (re-record if the canonical form changes).
 - `layer1_status`: observed locator-resolution status, recorded as-is.
   For `reject` rows screened out before probing, the explicit sentinel
   is `"not_run"`.
@@ -115,7 +123,10 @@ One JSON object per line. Generic field names; instantiate per domain:
 
 Rules: no evidence = not counted. `pass` with empty `reverify` or a
 missing evidence file is rejected by validation. Rejected records are
-kept with reasons — they prove coverage.
+kept with reasons — they prove coverage. `reject` rows still carry
+every field: use `evidence_ref: ""` and `reverify: []`. For rejects
+screened before probing, `layer1_status` is `"not_run"` and
+`layer2_match` is `false`, with the reason noting L2 was not run.
 
 ## 6. Orchestration
 
@@ -124,7 +135,10 @@ kept with reasons — they prove coverage.
   fanning out to subagents (subagents-driven vs inline). The threshold
   (default 3) is overridable per project.
 - **Naming**: workers are named `<lane>-<source>`; lanes own disjoint
-  file sets.
+  file sets. Inline (gate not triggered) with 2-3 sources: still write
+  one lane file per source (`lane-a.jsonl`, `lane-b.jsonl`, ...), note
+  the source-to-lane mapping in the run notes, and merge with
+  `LANE=PATH` labels as usual.
 - **Write isolation**: workers write only temp files; only synthesis
   writes lane files; only the merger writes the final file. No
   exceptions.
@@ -203,6 +217,14 @@ Package deterministically: same inputs produce byte-identical outputs.
 `scripts/vds.py` (Python 3, standard library only, offline,
 deterministic):
 
+- `vds.py init <task-dir> --topic <t> --quota <n>
+  --sources <a,b> [--per-source <n>] [--over-gather <r>]
+  [--inclusion <c>]... [--exclusion <c>]... [--l1 <t>] [--l2 <t>]
+  [--evidence-budget <t>] [--force]`: writes `contract.json`
+  (byte-exact for the same arguments) plus `workspace/` and
+  `evidence/`; journal-domain defaults, overridable. Refuses an
+  existing contract without `--force`. Exit 0 ok, 1 refused,
+  2 bad usage.
 - `vds.py validate <files...>`: schema, decision enum, identifier
   format, intra-file dedup, mandatory evidence + reverify for `pass`.
   Exit 0 clean, 1 errors found, 2 bad usage.
@@ -212,10 +234,20 @@ deterministic):
   duplicate report. Merges every row given by default; `--pass-only`
   restricts to `pass` rows. The final merge always uses `--pass-only`.
   Byte-deterministic output.
+- `vds.py package --final <f> --manifest <m> -o <out-dir>
+  [--merged <f>] [--contract <c>] [--excluded <md>]
+  [--needs-richer <f>] [--disputes <md>] [--root <dir>]
+  [--evidence-dir <dir>] [--force]`: validates final (+ merged,
+  manifest rows, needs rows), requires one manifest row per final
+  `pass` identifier, then assembles the package (copies +
+  evidence + generated README). Any error refuses the package
+  and writes nothing. Refuses a non-empty output dir without
+  `--force`. Exit 0 ok, 1 errors found, 2 bad usage.
 
 Example:
 
 ```sh
+vds.py init my-task --topic "<TOPIC>" --quota 3 --sources CROSSREF,OPENALEX
 vds.py merge lane-a=a.jsonl lane-b=b.jsonl --keep-order lane-a,lane-b -o merged.jsonl
 ```
 

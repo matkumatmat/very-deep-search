@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 1 — Cards batch 3 (16-20) done, uncommitted; Phase 1 complete pending commit
-- status: 20/20 cards distilled, batch gate green; awaiting batch 3 commit order
+- phase: 2 — Runner UX done, uncommitted (gate passed, confusion closed)
+- status: blind quota-3 passed (4/4 verified); 6/6 confusion fixed; awaiting Phase 2 commit order
 - updated: 2026-10-25 (batch session)
 
 ## Next actions
@@ -21,9 +21,15 @@ memory a fresh session has.
 8. [x] Phase 1 batch 2: cards 11-15 (MORAREF, NELITI, ONESEARCH, OPENAIRE, PUBMED) — gate green
 9. [x] Commit batch 2 (694bd59, approved 2026-10-25)
 10. [x] Phase 1 batch 3: cards 16-20 (RAMA, RESEARCHGATE, SEMANTICSCHOLAR, SINTA, UNPAYWALL) — gate green
-11. [ ] Commit batch 3 (needs explicit approval) — completes Phase 1 (cards 1-20)
-12. [ ] Publish-phase tech debt (see section below; due Phase 4)
-13. [ ] Phase 2: Runner UX (gate: blind foreign agent completes quota-3 on user docs alone)
+11. [x] Commit batch 3 (f6b6512, approved 2026-10-25) — Phase 1 complete (20/20)
+12. [x] Phase 2.1: scaffold script (vds init, byte-exact contract + tests)
+13. [x] Phase 2.2: packaging script (vds package, verified assembly + tests)
+14. [x] Phase 2.3: user README + 5-minute quickstart (+ SKILL 11, CHANGELOG 0.2.0)
+15. [x] Phase 2.4: one small redacted demo (demo-quota3, 3 real DOIs, replay test)
+16. [x] Phase 2 gate: blind agent completes quota-3 on user docs alone — PASSED
+17. [ ] Commit Phase 2 (needs explicit approval)
+18. [ ] Publish-phase tech debt (see section below; due Phase 4)
+19. [ ] Phase 3: QA hardening (gate: zero open confusion; budgets met)
 
 ## Card order (Phase 1)
 
@@ -58,6 +64,23 @@ memory a fresh session has.
   SINTA trimmed 105->99), zero origin-topic terms, no leaks;
   validate true/zero diagnostics, 24/24 tests. Phase 1 distillation
   complete (20/20 cards); commit pending.
+- 2026-10-25: batch 3 committed (f6b6512, approved). Phase 1 done.
+- 2026-10-25: Phase 2.1+2.2 — vds init + package implemented
+  (stdlib-only, offline, deterministic); tests/run.sh 24->52 checks green.
+- 2026-10-25: Phase 2.4 — examples/demo-quota3 shipped (3 real DOIs,
+  L1+L2 verified 2026-10-25, redacted evidence); replay check added,
+  54/54 green.
+- 2026-10-25: Phase 2.3 — README quickstart + one-prompt UX, SKILL 11
+  (init/package), CHANGELOG 0.2.0; help-vs-doc match, sanitization clean.
+- 2026-10-25: Phase 2 gate PASSED — blind subagent (skill-only copy,
+  topic biochar, no prior answers) delivered 4/4 verified passes
+  (9 gathered, 5 rejected with reasons), all tool runs exit 0;
+  package re-validates clean; 1 record independently re-verified
+  (L1 200 same URL, L2 title match). Confusion 6/6 fixed in SKILL.md:
+  reject-row convention, layer2_match for unprobed rejects, minimum
+  content artifact, final.jsonl hand-written, inline lane convention,
+  canonical source_url. Limitation: same-model, honor-system
+  isolation — true cross-model foreign test deferred to Phase 3 QA.
 
 ## Tech debt (publish phase, due Phase 4)
 

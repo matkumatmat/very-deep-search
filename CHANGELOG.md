@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.0 — Runner UX
+
+- `vds.py init`: scaffold a task directory with a byte-exact
+  `contract.json` (journal-domain defaults, overridable) plus
+  `workspace/` and `evidence/`.
+- `vds.py package`: verify (final, manifest rows with byte-size
+  checks, needs rows, manifest coverage) then assemble the
+  deterministic final package with a generated README; refuses
+  on any error and writes nothing.
+- `README.md`: 5-minute quickstart with a paste-ready agent
+  prompt; `examples/demo-quota3/`: complete quota-3 task
+  (3 real verified DOIs, redacted evidence) with a byte-exact
+  replay check.
+- `SKILL.md` §11 documents `init` + `package` (`--help` stays
+  authoritative). Tests: 24 → 54 checks, all offline.
+
 ## 0.1.1 — foreign-agent hardening
 
 Validated by an independent foreign-agent run from a clean repo
