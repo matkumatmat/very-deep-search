@@ -5,7 +5,7 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 1 — Cards batch 1 (6-10) done, uncommitted
+- phase: 1 — Cards batch 2 (11-15) done, uncommitted
 - status: 5 cards distilled, batch gate green; awaiting commit/next-batch order
 - updated: 2026-10-25 (batch session)
 
@@ -17,8 +17,10 @@ memory a fresh session has.
 4. [x] Batch 0: .gitignore with dev-corpus/ (verified via check-ignore)
 5. [x] git add + initial commit (163fed7, 27 files, dev-corpus/ excluded)
 6. [x] Phase 1 batch 1: cards 6-10 (ARXIV, BASE, CORE, EUROPEPMC, ISJD) — gate green
-7. [ ] Commit batch 1 (needs explicit approval — initial-commit approval did not cover this)
-8. [ ] Phase 1 batch 2: cards 11-15 (MORAREF, NELITI, ONESEARCH, OPENAIRE, PUBMED)
+7. [x] Commit batch 1 (cae2c38, approved 2026-10-25)
+8. [x] Phase 1 batch 2: cards 11-15 (MORAREF, NELITI, ONESEARCH, OPENAIRE, PUBMED) — gate green
+9. [ ] Commit batch 2 (needs explicit approval)
+10. [ ] Phase 1 batch 3: cards 16-20 (RAMA, RESEARCHGATE, SEMANTICSCHOLAR, SINTA, UNPAYWALL)
 
 ## Card order (Phase 1)
 
@@ -44,6 +46,10 @@ memory a fresh session has.
 - 2026-10-25: batch 1 gate green — 5 cards (84/98/99/88/78 lines,
   all sections, canonical+dead domains), zero origin-topic terms,
   no paths/emails/tokens; validate true/zero diagnostics, 24/24 tests.
+- 2026-10-25: batch 1 committed (cae2c38, approved).
+- 2026-10-25: batch 2 gate green — 5 cards (85/97/80/100/93 lines,
+  OPENAIRE trimmed 103->100), zero origin-topic terms, no leaks;
+  validate true/zero diagnostics, 24/24 tests.
 
 ## Decisions log
 
