@@ -135,5 +135,4 @@ artifact. No evidence = not counted.
 
 ## License
 
-MIT (pending human confirmation). Author placeholder: see
-`AUTHOR_NAME` in `SKILL.md` frontmatter — the human decides.
+MIT — see `LICENSE`. Copyright 2026 matkumatmat.

@@ -3,9 +3,8 @@
 ## Unreleased — publish hardening
 
 - `SKILL.md` frontmatter: `license`, `compatibility`
-  (muse/opencode/claude), `metadata`. License and author are
-  human decisions (`MIT (pending human confirmation)`,
-  `AUTHOR_NAME`).
+  (muse/opencode/claude), `metadata`. License MIT, author
+  matkumatmat (human-confirmed); see `LICENSE`.
 - `README.md`: per-harness install instructions with
   verified-vs-expected labels, harness support matrix,
   license line.

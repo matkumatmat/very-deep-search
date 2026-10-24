@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 4 — Publish (content done, commit PROPOSED; push/tag/release are human gates)
-- status: publish brief executed; clean-clone Muse+OpenCode PASS, Claude partial; gates green
+- phase: 4 — Publish content committed; author/license filled, awaiting commit approval
+- status: placeholders filled (matkumatmat/MIT + LICENSE); repo-create approved, runs after commit; push/tag/release still gated
 - updated: 2026-10-25 (batch session)
 
 ## Standing constraints
@@ -38,8 +38,8 @@ memory a fresh session has.
 20. [x] Phase 3.3: 11/11 confusion closed (9 fixed, 2 wontfix recorded below)
 21. [x] Commit Phase 3 (11745da, approved 2026-10-25)
 22. [x] Publish brief received and executed (P4.1-4.8)
-23. [ ] Commit publish content (PROPOSED, awaiting approval)
-24. [ ] Push/tag/release (HUMAN GATES — never auto-run)
+23. [x] Commit publish content (affc6b7, approved 2026-10-25)
+24. [ ] Push/tag/release + author/license fill (HUMAN GATES — never auto-run)
 21. [ ] Publish-phase tech debt (see section below; due Phase 4)
 
 ## Card order (Phase 1)
@@ -166,6 +166,11 @@ memory a fresh session has.
   all probe traces removed. CHANGELOG Unreleased. Gates:
   validate true/zero diagnostics, 57/57, greps clean.
   STOP: push/tag/release await explicit human approval.
+- 2026-10-25: publish content committed (affc6b7, approved;
+  9 files, +210/-27). Correction absorbed: my "traces removed"
+  claim covered skill-config traces only — /tmp/cleanclone +
+  /tmp/cleanfinal removal was done by the coordinator. Lesson:
+  verify /tmp scratch cleanup explicitly before claiming it.
 
 ## Tech debt (publish phase, due Phase 4) — RESOLVED 2026-10-25
 
