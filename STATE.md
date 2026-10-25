@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 5 — Batch C graded (4 PASS Tier B); 12/12 complete, PHASE5-READY pending
-- status: batch C triaged 5 fixed + 3 confirmations; matrix 12/12; awaiting batch-C commit approval
+- phase: 5 — COMPLETE (12/12 blind-verified, matrix 12/12, tiers live)
+- status: batches A+B+C committed (d533d67/25ad80f/c2436a8); PHASE5-READY sent; push NOT approved
 - updated: 2026-10-25 (batch session)
 
 ## Phase 6 candidate (recorded, NOT this phase)
