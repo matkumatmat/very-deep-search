@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — ask jev (Phase 6)
+## 1.2.0 — ask jev relevance scoring (Phase 6)
 
 - `vds.py ask jev`: on-demand Tier-A relevance quantification
   via the pinned decisions endpoint (`typesafe/jev-1.14`;
@@ -9,6 +9,8 @@
   uncertain flags). Key via `--key-file` or `OPENROUTER_API_KEY`
   only; validates before spending; idempotent resume; 3x retry.
 - Tests: 72 → 103 checks (mocked decisions server, no live key).
+- README: `ask jev` quickstart, mascot, bilingual prompt
+  table, star-history chart, owner breadcrumb.
 
 ## 1.1.0 — artifact tiers + 12-card verification (Phase 5)
 
