@@ -10,6 +10,7 @@
     "I1: studies that test or discuss the topic against outcomes measured at the work-unit level (unit, division, branch, or organization acting as a unit), with data."
   ],
   "min_tier_a": 3,
+  "notes": "",
   "over_gather_ratio": 1.5,
   "quota": {
     "per_source": 2,
@@ -21,7 +22,7 @@
   ],
   "topic": "widgets and gadgets",
   "verification_contract": {
-    "layer1": "doi.org/<ID> must end HTTP 200 at the article landing page with article markers; challenge, login, or empty bodies fail.",
+    "layer1": "doi.org/<ID> must end HTTP 200 at the article landing page with article markers; challenge, login, or empty bodies fail Tier A but may pass as Tier B when L2 matches and the block cause is recorded.",
     "layer2": "api.crossref.org/works/<ID> title + year must match the candidate."
   }
 }

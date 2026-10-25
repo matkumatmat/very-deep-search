@@ -21,6 +21,11 @@
   ONESEARCH (doi.org-first fulltext rule); L2 NFKC+quote-fold
   rule, portable reverify (curl+python3 only), quote
   window-match on extracted text.
+- Batch C fixes: tier-aware default L1 (challenged L1 may pass
+  as Tier B with L2 + block cause); contract `notes` field
+  minted by `init`; Tier-B-in-final rule (`min_tier_a: 0`);
+  manifest `bytes` exactness; SEMANTICSCHOLAR shared-egress
+  60s lookup note.
 
 ## 1.0.0 — publish hardening
 

@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 5 — Batch B graded (3 PASS Tier A, SINTA infra-FAIL); batch C next
-- status: batch B triaged 6/6 fixed (SKILL + 3 cards); matrix 8/12; awaiting batch-B commit approval
+- phase: 5 — Batch C graded (4 PASS Tier B); 12/12 complete, PHASE5-READY pending
+- status: batch C triaged 5 fixed + 3 confirmations; matrix 12/12; awaiting batch-C commit approval
 - updated: 2026-10-25 (batch session)
 
 ## Phase 6 candidate (recorded, NOT this phase)
@@ -46,7 +46,7 @@ memory a fresh session has.
 22. [x] Publish brief received and executed (P4.1-4.8); P4 committed affc6b7; repo created; main pushed; v1.0.0 tagged+pushed (all human-approved; no release)
 23. [x] P5 batch A: blind-verify BASE/CORE/EUROPEPMC/PUBMED — 4/4 PASS, 5/5 confusion fixed, retrofitted to tiers
 24. [x] P5 batch B: blind-verify ISJD/NELITI/ONESEARCH/SINTA (NATIVE tiers) — 3 PASS Tier A, SINTA infra-FAIL, 6/6 confusion fixed
-25. [ ] P5 batch C: blind-verify OPENAIRE/RESEARCHGATE/SEMANTICSCHOLAR/UNPAYWALL (NATIVE tier schema)
+25. [x] P5 batch C: blind-verify OPENAIRE/RESEARCHGATE/SEMANTICSCHOLAR/UNPAYWALL (NATIVE tiers) — 4 PASS Tier B, 5 fixed + 3 confirmations
 26. [ ] support-matrix.md complete (tier column added; batch-A rows filled)
 27. [ ] Commit tier extension + batch A (PROPOSE with P5-EXT, await approval each time)
 23. [x] Commit publish content (affc6b7, approved 2026-10-25)
@@ -201,6 +201,20 @@ memory a fresh session has.
   quote window-match on extracted text (R2/R² artifacts ok).
   Agent sloppiness (no doc change): orphan spare ISJD PDF in
   task-dir evidence, package clean.
+- 2026-10-25: P5 batch C graded — 4/4 PASS Tier B, all
+  publisher-blocked (Elsevier paywall, ScienceDirect
+  Cloudflare, IOP Radware captcha, MDPI Akamai 403);
+  min_tier_a lowered to 0 but block note MISSING from
+  contract (template had no notes key — fixed by minting
+  it). Lanes 4x1 pass, package final 4 passes, all vds
+  exit 0, portable reverify (no jq); L1/L2 re-ran: 200/
+  200/403 + 4/4 titles match (IOP challenge intermittent
+  — agent saw captcha, grader saw 200, same article).
+  5 fixed (tier-aware L1, notes field, Tier-B-in-final,
+  bytes exactness, S2 60s note) + 3 confirmations
+  (#3/#4/#6 good-as-is). Sloppiness: OpenAlex error JSON
+  saved as W4417198255.pdf (task-dir only, unreferenced);
+  0 rejects again. Matrix 12/12.
 - 2026-10-25: Phase 4 publish content done — frontmatter
   (license/compatibility/metadata, validator-clean), README
   3-harness install + matrix (verified/expected labeled),

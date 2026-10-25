@@ -36,6 +36,9 @@ Do not start gathering until all of these are fixed:
   (see §4) before it is gathered.
 - `quota`: total target plus per-lane/per-source targets.
 - `min_tier_a`: minimum Tier-A passes (default: quota total).
+  When infrastructure blocks force `min_tier_a: 0`, Tier-B
+  passes ARE included in `final.jsonl` (with block causes);
+  `excluded-from-final.md` lists merged-but-not-final rows.
   Quota counts Tier A only unless the contract explicitly
   lowers this — document the choice either way.
 - `over_gather_ratio`: default 1.5x quota (attrition from anti-bot and
@@ -161,7 +164,9 @@ every field: use `evidence_ref: ""` and `reverify: []`. For rejects
 screened before probing, `layer1_status` is `"not_run"` and
 `layer2_match` is `false`, with the reason noting L2 was not run.
 `layer1_status` for `pass` is the observed success (`200`, or an
-equivalent success string such as `"200-ok"`); for `reject` it is
+equivalent success string such as `"200-ok"`); a challenged L1
+(`403`, challenge note) may still pass as Tier B when L2
+matches and the block cause is recorded. For `reject` it is
 the observed failure (`404`, `403`, a challenge note) or `"not_run"`.
 `pass` rows also carry `tier` (`"A"`/`"B"`); Tier-B rows state
 `tier-b-block: <cause>` in `reason`.
@@ -287,8 +292,11 @@ deterministic):
   Tier-A finals must meet the contract `min_tier_a` (default:
   quota total). If a registry source is infrastructure-blocked
   (per its card), lower `min_tier_a` to the achievable Tier-A
-  count and note the block in the contract. Any error refuses
-  the package and writes nothing. Refuses a non-empty output dir without `--force`.
+  count and note the block in the contract `notes` field
+  (`init` mints it; empty means no blocks claimed). Manifest
+  `bytes` must equal the actual evidence file size exactly —
+  mismatch refuses the package. Any error refuses the package
+  and writes nothing. Refuses a non-empty output dir without `--force`.
   All bracketed flags are optional; omitted files are listed
   as not provided in the generated README.
   Exit 0 ok, 1 errors found, 2 bad usage.

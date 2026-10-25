@@ -321,7 +321,9 @@ DEFAULT_EXCLUSION = (
 
 DEFAULT_L1 = (
     "doi.org/<ID> must end HTTP 200 at the article landing page with "
-    "article markers; challenge, login, or empty bodies fail."
+    "article markers; challenge, login, or empty bodies fail Tier A "
+    "but may pass as Tier B when L2 matches and the block cause is "
+    "recorded."
 )
 
 DEFAULT_L2 = (
@@ -392,6 +394,7 @@ def cmd_init(args):
         "source_registry": sources,
         "quota": {"total": args.quota, "per_source": per_source},
         "min_tier_a": min_tier_a,
+        "notes": "",
         "over_gather_ratio": args.over_gather,
         "verification_contract": {
             "layer1": args.l1.strip() if args.l1 else DEFAULT_L1,

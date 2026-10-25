@@ -39,8 +39,10 @@
 ## Anti-bot & standard response
 
 - The throttle IS the anti-bot: persistent 429 on search,
-  clean 200 on lookup. Standard response is the split
-  pattern above — not retries, not evasion.
+  clean 200 on lookup. Lookup may also 429 on a shared egress
+  IP (observed 2026-10-25) — wait >=60s between calls, then a
+  single retry. Standard response is the split pattern above —
+  not retries, not evasion.
 - Publisher-side blocks (big-publisher 403s to datacenter
   curl, small-OJS 302s without Location) fail strict L1
   even for valid DOIs: record and reject, never force.

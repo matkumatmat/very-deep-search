@@ -35,12 +35,12 @@ under `/tmp` by path + date. No evidence = no verdict.
 | MORAREF | 2026-10-25 | opencode/nemotron-3-ultra-free | PASS | B | /tmp/blindtest3/work/gnn-traffic/package (2026-10-25) | F3.1 sampled run; tier B assessed retroactively (metadata snapshots) |
 | NELITI | 2026-10-25 | nemotron-3-ultra-free | PASS | A (OAI-PMH fallback) | 5 | Referer trick dead (card patched); OAI metadata + OJS PDF |
 | ONESEARCH | 2026-10-25 | nemotron-3-ultra-free | PASS | A (doi.org PDF) | 4 | Zenodo fulltext via doi.org; doi-first rule added to card |
-| OPENAIRE | — | — | PENDING | — | — | Phase 5 batch C (native tier schema) |
+| OPENAIRE | 2026-10-25 | nemotron-3-ultra-free | PASS | B (Elsevier paywall) | 3 | Quota-1 met; API discovery clean, content blocked at publisher |
 | OPENALEX | 2026-10-25 | muse-subagent (same-model) | EXERCISED | — | /tmp/blindtest/work/biochar-task/package (2026-10-25) | Phase-2 pipeline blind; no per-card verdict recorded |
 | PUBMED | 2026-10-25 | opencode/nemotron-3-ultra-free | PASS | B | /tmp/p5a/work/air-pollution-asthma-retro/package (2026-10-25) | P5 batch A quota-1; E-utilities worked; retrofit (metadata snapshot, title quote); requests 3 vs ceiling 60 |
 | RAMA | 2026-10-25 | opencode/nemotron-3-ultra-free | PASS | B | /tmp/blindtest3/work/gnn-traffic/package (2026-10-25) | F3.1 sampled run; tier B assessed retroactively (metadata snapshots) |
-| RESEARCHGATE | — | — | PENDING | — | — | Phase 5 batch C (native tier schema) |
+| RESEARCHGATE | 2026-10-25 | nemotron-3-ultra-free | PASS | B (Cloudflare challenge) | 3 | Crossref discovery + web-index per card; no direct fetch |
 | SCHOLAR | 0.1.1 foreign-agent run | foreign (pre-program) | LEGACY | — | none retained | CHANGELOG 0.1.1; needs a fresh blind run for strict compliance |
-| SEMANTICSCHOLAR | — | — | PENDING | — | — | Phase 5 batch C (native tier schema) |
+| SEMANTICSCHOLAR | 2026-10-25 | nemotron-3-ultra-free | PASS | B (IOP captcha) | 4 | DOI lookup OK after wait; card gains shared-egress 60s note |
 | SINTA | 2026-10-25 | nemotron-3-ultra-free | FAIL (infra) | n/a | 3 | 403 on first probe from cloud IP; card now notes immediate block |
-| UNPAYWALL | — | — | PENDING | — | — | Phase 5 batch C (native tier schema) |
+| UNPAYWALL | 2026-10-25 | nemotron-3-ultra-free | PASS | B (MDPI Akamai 403) | 4 | v2 lookup correct OA metadata; example.com 422 confirmed |
