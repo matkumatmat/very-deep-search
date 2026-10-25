@@ -45,8 +45,10 @@
   https://www.neliti.com/publications/<id>/..." .../download/<file_id>`
   returns 200 `%PDF`. Missing Referer or a wrong `file_id`
   returns 403/302 — fix the request, do not retry bare.
-- If a HEAD with correct headers still 403s, escalate to a
-  browser-capable fetch before giving up on the file.
+- If a HEAD with correct headers still 403s, CloudFront rules
+  have drifted (observed 2026-10-25: Referer no longer helps) —
+  prefer OAI-PMH for metadata, escalate to a browser-capable
+  fetch only for the file itself.
 
 ## Parser notes
 

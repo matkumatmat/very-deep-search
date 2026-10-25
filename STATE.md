@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 5 — Tier extension landed; batch A retrofitted; batches B/C run native next
-- status: tiers implemented + gates green; P5-EXT replying; batch B/C briefs must require native tiers
+- phase: 5 — Batch B graded (3 PASS Tier A, SINTA infra-FAIL); batch C next
+- status: batch B triaged 6/6 fixed (SKILL + 3 cards); matrix 8/12; awaiting batch-B commit approval
 - updated: 2026-10-25 (batch session)
 
 ## Phase 6 candidate (recorded, NOT this phase)
@@ -45,7 +45,7 @@ memory a fresh session has.
 21. [x] Commit Phase 3 (11745da, approved 2026-10-25)
 22. [x] Publish brief received and executed (P4.1-4.8); P4 committed affc6b7; repo created; main pushed; v1.0.0 tagged+pushed (all human-approved; no release)
 23. [x] P5 batch A: blind-verify BASE/CORE/EUROPEPMC/PUBMED — 4/4 PASS, 5/5 confusion fixed, retrofitted to tiers
-24. [ ] P5 batch B: blind-verify ISJD/NELITI/ONESEARCH/SINTA (NATIVE tier schema)
+24. [x] P5 batch B: blind-verify ISJD/NELITI/ONESEARCH/SINTA (NATIVE tiers) — 3 PASS Tier A, SINTA infra-FAIL, 6/6 confusion fixed
 25. [ ] P5 batch C: blind-verify OPENAIRE/RESEARCHGATE/SEMANTICSCHOLAR/UNPAYWALL (NATIVE tier schema)
 26. [ ] support-matrix.md complete (tier column added; batch-A rows filled)
 27. [ ] Commit tier extension + batch A (PROPOSE with P5-EXT, await approval each time)
@@ -186,6 +186,21 @@ memory a fresh session has.
   Batch A retrofitted from saved evidence only (all Tier B,
   title quotes cited to evidence files) into
   /tmp/p5a/work/air-pollution-asthma-retro + RETROFIT.md.
+- 2026-10-25: P5 batch B graded — 3/4 PASS Tier A (ISJD via
+  Crossref fallback, NELITI via OAI-PMH, ONESEARCH via HTML +
+  doi.org PDF; all vds exit 0, package 3/3/3, 3/3 reverify
+  reproduced, all 3 quotes grounded in PDF text, leak audit
+  clean, counts 4/5/4/3 within budgets). SINTA FAIL on
+  documented infrastructure (403 first probe, cloud IP) with
+  contract min_tier_a 4->3 noted. 6/6 confusion FIXED (SKILL
+  fallback trigger + blocked-source min_tier_a; NELITI Referer
+  drift; SINTA immediate block; ONESEARCH doi-first; quota
+  shortfall same fix). Coordinator B-VERIFY folded in: L2
+  NFKC+quote-fold rule (byte compare false-failed on Unicode
+  apostrophe), reverify portability (curl+python3, no jq),
+  quote window-match on extracted text (R2/R² artifacts ok).
+  Agent sloppiness (no doc change): orphan spare ISJD PDF in
+  task-dir evidence, package clean.
 - 2026-10-25: Phase 4 publish content done — frontmatter
   (license/compatibility/metadata, validator-clean), README
   3-harness install + matrix (verified/expected labeled),

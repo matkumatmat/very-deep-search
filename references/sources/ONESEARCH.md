@@ -55,6 +55,8 @@
   Top records cross-verify against sibling indexes.
 - Fulltext availability is per-provider: a record existing does
   not imply a fetchable PDF — always HEAD the `fulltext` link.
+  Resolve via doi.org first; provider fulltext links are
+  auxiliary (observed: Zenodo-hosted fulltext, 2026-10-25).
 
 ## Fallback chain
 

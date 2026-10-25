@@ -31,10 +31,10 @@ under `/tmp` by path + date. No evidence = no verdict.
 | DOAJ | 0.1.1 foreign-agent run | foreign (pre-program) | LEGACY | — | none retained | CHANGELOG 0.1.1; needs a fresh blind run for strict compliance |
 | EUROPEPMC | 2026-10-25 | opencode/nemotron-3-ultra-free | PASS | B | /tmp/p5a/work/air-pollution-asthma-retro/package (2026-10-25) | P5 batch A quota-1; primary API worked first try; retrofit (metadata snapshot, title quote); requests 3 vs ceiling 40 |
 | GARUDA | 0.1.1 foreign-agent run | foreign (pre-program) | LEGACY | — | none retained | CHANGELOG 0.1.1 (canonical/dead-domain fix from that run); needs a fresh blind run for strict compliance |
-| ISJD | — | — | PENDING | — | — | Phase 5 batch B (native tier schema) |
+| ISJD | 2026-10-25 | nemotron-3-ultra-free | PASS | A (Crossref fallback) | 4 | Quota-1 met; canonical dead, OJS PDF + grounded quote |
 | MORAREF | 2026-10-25 | opencode/nemotron-3-ultra-free | PASS | B | /tmp/blindtest3/work/gnn-traffic/package (2026-10-25) | F3.1 sampled run; tier B assessed retroactively (metadata snapshots) |
-| NELITI | — | — | PENDING | — | — | Phase 5 batch B (native tier schema) |
-| ONESEARCH | — | — | PENDING | — | — | Phase 5 batch B (native tier schema) |
+| NELITI | 2026-10-25 | nemotron-3-ultra-free | PASS | A (OAI-PMH fallback) | 5 | Referer trick dead (card patched); OAI metadata + OJS PDF |
+| ONESEARCH | 2026-10-25 | nemotron-3-ultra-free | PASS | A (doi.org PDF) | 4 | Zenodo fulltext via doi.org; doi-first rule added to card |
 | OPENAIRE | — | — | PENDING | — | — | Phase 5 batch C (native tier schema) |
 | OPENALEX | 2026-10-25 | muse-subagent (same-model) | EXERCISED | — | /tmp/blindtest/work/biochar-task/package (2026-10-25) | Phase-2 pipeline blind; no per-card verdict recorded |
 | PUBMED | 2026-10-25 | opencode/nemotron-3-ultra-free | PASS | B | /tmp/p5a/work/air-pollution-asthma-retro/package (2026-10-25) | P5 batch A quota-1; E-utilities worked; retrofit (metadata snapshot, title quote); requests 3 vs ceiling 60 |
@@ -42,5 +42,5 @@ under `/tmp` by path + date. No evidence = no verdict.
 | RESEARCHGATE | — | — | PENDING | — | — | Phase 5 batch C (native tier schema) |
 | SCHOLAR | 0.1.1 foreign-agent run | foreign (pre-program) | LEGACY | — | none retained | CHANGELOG 0.1.1; needs a fresh blind run for strict compliance |
 | SEMANTICSCHOLAR | — | — | PENDING | — | — | Phase 5 batch C (native tier schema) |
-| SINTA | — | — | PENDING | — | — | Phase 5 batch B (native tier schema) |
+| SINTA | 2026-10-25 | nemotron-3-ultra-free | FAIL (infra) | n/a | 3 | 403 on first probe from cloud IP; card now notes immediate block |
 | UNPAYWALL | — | — | PENDING | — | — | Phase 5 batch C (native tier schema) |

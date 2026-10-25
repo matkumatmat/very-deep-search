@@ -34,7 +34,8 @@
 - Sequential ONLY: 2-3s delay + random 1-2s jitter. No
   parallel, no async burst. Exponential backoff, stop on 403.
 - Run from a local/VPS network: cloud-notebook IPs are
-  blocked, and 403s appear after ~50+ fast requests.
+  blocked (possibly on the first request, not only after
+  bursts), and 403s appear after ~50+ fast requests.
 
 ## Anti-bot & standard response
 

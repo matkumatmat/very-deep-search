@@ -15,6 +15,12 @@
   tier labels; the demo shows the Tier-B pattern).
 - Demo migrated to documented all-Tier-B (`min_tier_a: 0`).
 - Tests: 57 → 72 checks, all offline.
+- Batch B fixes: fallback trigger rule (SKILL §4), blocked-source
+  `min_tier_a` guidance (package section); NELITI (CloudFront
+  Referer dead, prefer OAI), SINTA (immediate cloud-IP block),
+  ONESEARCH (doi.org-first fulltext rule); L2 NFKC+quote-fold
+  rule, portable reverify (curl+python3 only), quote
+  window-match on extracted text.
 
 ## 1.0.0 — publish hardening
 

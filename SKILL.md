@@ -65,7 +65,10 @@ Do not start gathering until all of these are fixed:
    carries a content tier: **Tier A** (full text retrieved — PDF or
    extracted article text — plus a mandatory relevance quote from
    that text showing the inclusion-criteria match, saved under
-   `evidence/` and cited by the record) or **Tier B**
+   `evidence/` and cited by the record; graders window-match
+   distinctive phrases on extracted text, not raw bytes —
+   extraction artifacts like R2 vs R² do not fail a genuine
+   quote) or **Tier B**
    (metadata-only: allowed only when full text is genuinely
    unreachable — paywall, 403, dead archive — labeled as such in
    `reason` with `tier-b-block: <cause>`, never counted as
@@ -114,7 +117,9 @@ before gathering. If none exists, write it first
 - Rate limits and courtesy delays, observed empirically.
 - Known anti-bot behaviors and the standard response.
 - Parser notes (selectors, pagination, encoding traps).
-- Fallback chain when the primary path is down.
+- Fallback chain when the primary path is down. Trigger: a
+  non-200/000 L1 probe on the canonical base means dead —
+  invoke the chain in order, no extra probing of the dead base.
 - Retry budget: probe 1x for status, 1x retry for ambiguous results from
   a different angle, backoff on 429, then STOP and switch angles —
   never hammer the same door. Per-source request ceilings per run
@@ -137,10 +142,15 @@ One JSON object per line. Generic field names; instantiate per domain:
   For `reject` rows screened out before probing, the explicit sentinel
   is `"not_run"`.
 - `layer2_match`: boolean, independent metadata match.
+  Compare after NFKC + quote folding (ASCII/Unicode apostrophe
+  and quote variants are equivalent) — strict byte compare
+  false-fails on publisher typography.
 - `decision`: `pass` or `reject` only.
 - `reason`: cites the criterion and the observed evidence.
 - `reverify`: exact commands that reproduce the verification
-  (mandatory for `pass`).
+  (mandatory for `pass`). Portable only: `curl` + `python3` —
+  no `jq` or other non-guaranteed tools, so any grader can
+  re-run them.
 - `evidence_ref`: path (workspace-relative) to saved evidence
   (mandatory for `pass`).
 
@@ -275,8 +285,10 @@ deterministic):
   evidence + generated README). Tier checks: manifest Tier-A rows
   need a non-empty quote, Tier-B rows need the block cause, and
   Tier-A finals must meet the contract `min_tier_a` (default:
-  quota total). Any error refuses the package and writes
-  nothing. Refuses a non-empty output dir without `--force`.
+  quota total). If a registry source is infrastructure-blocked
+  (per its card), lower `min_tier_a` to the achievable Tier-A
+  count and note the block in the contract. Any error refuses
+  the package and writes nothing. Refuses a non-empty output dir without `--force`.
   All bracketed flags are optional; omitted files are listed
   as not provided in the generated README.
   Exit 0 ok, 1 errors found, 2 bad usage.
