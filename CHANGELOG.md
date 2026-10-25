@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — pre-flight interview gate (Phase 7)
+
+- SKILL.md §2 `contact_email` gate: before gathering, the agent
+  lists sources, states email needs (UNPAYWALL REQUIRED, OPENALEX
+  recommended), asks the user, and records skip/proxy on decline.
+- Standard `VDS_CONTACT_EMAIL` env channel; email via env only,
+  never persisted into lane files. UNPAYWALL/OPENALEX cards use
+  it in call examples + cross-ref the gate.
+
 ## 1.2.0 — ask jev relevance scoring (Phase 6)
 
 - `vds.py ask jev`: on-demand Tier-A relevance quantification

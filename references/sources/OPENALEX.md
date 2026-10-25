@@ -11,8 +11,9 @@
 
 ## Identity & auth
 
-- Polite pool: `User-Agent: <project> (mailto:<YOUR_EMAIL>)` gives
-  ~10 req/s + priority. Anonymous pool is slow.
+- Polite pool: `User-Agent: <project> (mailto:$VDS_CONTACT_EMAIL)`
+  gives ~10 req/s + priority. Anonymous pool is slow.
+  Collect the address at the SKILL.md §2 pre-flight interview gate.
 
 ## Rate limits & courtesy
 

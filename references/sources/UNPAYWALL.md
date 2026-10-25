@@ -10,7 +10,7 @@
   Unpaywall enriches each DOI with OA status + fulltext
   location. Lane flow: discovery -> DOI list -> Unpaywall
   v2 per DOI -> 2-layer verification -> staging.
-- REST: `GET https://api.unpaywall.org/v2/<DOI>?email=<EMAIL>`
+- REST: `GET https://api.unpaywall.org/v2/<DOI>?email=$VDS_CONTACT_EMAIL`
   returns one JSON object: `doi`, `doi_url`, `title`,
   `genre`, `year`, `published_date`, `is_oa`, `oa_status`
   (gold|green|bronze|hybrid|closed), `best_oa_location`
@@ -32,6 +32,7 @@
   invalid email -> HTTP 422. Disposable/`example.com`
   domains are rejected — use the operator's real
   contactable address via env/placeholder, never hardcoded.
+  Collect it at the SKILL.md §2 pre-flight interview gate.
 - Identified UA with `mailto:` on every call.
 
 ## Rate limits & courtesy
@@ -88,8 +89,8 @@
 
 - Discovery: Crossref `/works?query=<BILINGUAL TERMS>&rows=8
   &select=DOI,title,author,published,container-title,publisher`.
-- Enrichment: `/v2/<DOI>?email=<CONTACT>` sequential;
-  store `oa_status` + `best_oa_location` as OA proof.
+- Enrichment: `/v2/<DOI>?email=$VDS_CONTACT_EMAIL`
+  sequential; store `oa_status` + `best_oa_location` as OA proof.
 
 ## Run log
 

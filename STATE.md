@@ -5,9 +5,9 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 6 — ask jev implemented, awaiting commit approval
-- status: vds ask jev + SKILL/README docs + mascot + prompt table + 31 mocked tests done, gates green; P6-README2 replying; v1.1.0 pushed (f9d4bf5)
-- updated: 2026-10-25 (phase 6 session)
+- phase: 7 — pre-flight interview gate implemented, awaiting commit approval
+- status: SKILL §2 contact_email gate + VDS_CONTACT_EMAIL + 2 card cross-refs done, gates green; P7-INT replying
+- updated: 2026-10-25 (phase 7 session)
 
 ## Phase 6 (ACTIVE since 2026-10-25): `vds ask jev`
 
@@ -15,7 +15,8 @@ memory a fresh session has.
   (`typesafe/jev-1.14`, 10-level scale + scope yes/no),
   validated on 201 real records before implementation.
   Implemented 2026-10-25: cmd_ask + SKILL §11 docs + 31
-  mocked tests (103 total); gates green; awaiting approval.
+  mocked tests (103 total); gates green. Released 2026-10-25
+  as v1.2.0 (commit e27081c, tag pushed, live on origin).
 
 ## Standing constraints
 

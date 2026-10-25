@@ -52,6 +52,19 @@ Do not start gathering until all of these are fixed:
   L2 = authoritative metadata (title + year) matches the candidate.
 - `evidence_budget`: evidence per claim is mandatory; trim bulky raw
   evidence so agent handoffs stay small.
+- `contact_email`: pre-flight interview gate (runs BEFORE
+  gathering, alongside the subagent gate). The agent MUST:
+  (a) list the selected sources; (b) state which need a
+  contact email and why —
+  | Source | Need | Why |
+  | UNPAYWALL | REQUIRED | `?email=` param; missing/invalid -> HTTP 422; disposable/example.com rejected |
+  | OPENALEX | recommended | `mailto:` UA unlocks the polite pool; tight limits without it |
+  (c) ask the user for the address; (d) on decline, skip or
+  proxy those lanes BY EXPLICIT DECISION and record it in the
+  contract `notes` — never a surprise mid-run failure. Machine
+  channel: the `VDS_CONTACT_EMAIL` env var. PII hygiene: the
+  address travels via env only and is NEVER persisted into
+  lane files.
 
 ## 3. Pipeline stages
 
