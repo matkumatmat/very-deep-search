@@ -1,0 +1,1 @@
+{"answers": {"meets_scope": {"noul": 0.9, "type": "noul"}, "relevance": {"confidence": 0.94, "legend": {"0": "low", "9": "high"}, "probabilities": {"7": 0.8, "8": 0.2}, "score": 7.2, "type": "score"}}, "id": "gen-dec-fixture-0001", "model": "typesafe/jev-1.14-fixture", "provider": "TypeSafe", "usage": {"cost": 0.00003, "input_tokens": 476, "output_tokens": 70}}

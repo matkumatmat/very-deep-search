@@ -1,6 +1,16 @@
 # Changelog
 
-## Unreleased — artifact tiers (Phase 5)
+## Unreleased — ask jev (Phase 6)
+
+- `vds.py ask jev`: on-demand Tier-A relevance quantification
+  via the pinned decisions endpoint (`typesafe/jev-1.14`;
+  10-level scale + scope yes/no). Writes a scores sidecar,
+  prints a verdict table (relevant/borderline/off-topic +
+  uncertain flags). Key via `--key-file` or `OPENROUTER_API_KEY`
+  only; validates before spending; idempotent resume; 3x retry.
+- Tests: 72 → 103 checks (mocked decisions server, no live key).
+
+## 1.1.0 — artifact tiers + 12-card verification (Phase 5)
 
 - Content tiers: every pass row carries `tier` (`"A"` = full
   text retrieved with a relevance quote, `"B"` = metadata-only

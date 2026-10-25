@@ -300,6 +300,25 @@ deterministic):
   All bracketed flags are optional; omitted files are listed
   as not provided in the generated README.
   Exit 0 ok, 1 errors found, 2 bad usage.
+- `vds.py ask jev --package <dir> --topic <t> --scope <s>
+  [--key-file <f>] --out <scores.jsonl> [--abstract-chars <n>]`:
+  on-demand relevance quantification for Tier-A finals. Extracts
+  title + evidence text per Tier-A pass (PDFs via `pdftotext`),
+  scores each against topic + scope through one pinned decisions
+  endpoint (`typesafe/jev-1.14`, 10-level relevance scale +
+  scope yes/no), and writes a scores sidecar (`identifier`,
+  `doi`, `score_100`, `confidence`, `meets_scope`, `model`,
+  `cost`). Prints a verdict table: `>=70` relevant, `50-69`
+  borderline, `<50` off-topic; confidence `<0.6` flagged
+  uncertain. Needs a user-provided OpenRouter key (`--key-file`
+  or `OPENROUTER_API_KEY` env; never pasted on a command line).
+  Validates `final.jsonl` before spending any call; skips
+  already-scored rows on re-run (idempotent resume); retries
+  transient failures 3x. Cost/latency: a 201-record trial cost
+  $0.0065 (~$0.00003/record); calls run sequentially, seconds
+  per record. Use after packaging, when the user wants ranked
+  relevance — never as a substitute for the evidence pipeline.
+  Exit 0 scored, 1 data/API error, 2 bad usage.
 
 Example:
 

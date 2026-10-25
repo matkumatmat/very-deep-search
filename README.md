@@ -1,5 +1,7 @@
 # very-deep-search
 
+<img src="assets/vds.webp" alt="very-deep-search mascot" width="220" />
+
 Multi-agent gather-and-verify pipeline for deep literature search:
 collect candidates from many sources, verify each through two
 independent layers with saved evidence, merge deterministically,
@@ -88,6 +90,11 @@ scripts/vds.py merge a=my-task/workspace/lane-a.jsonl --keep-order a \
 scripts/vds.py package --final my-task/final.jsonl \
   --manifest my-task/manifest.jsonl --merged my-task/merged.jsonl \
   --contract my-task/contract.json --root my-task -o my-task/package
+
+# 4. Optional: score Tier-A finals for relevance (needs YOUR OpenRouter
+#    key in KEY; prints a verdict table and writes a scores sidecar).
+scripts/vds.py ask jev --package my-task/package --topic T --scope S \
+  --key-file KEY --out my-task/scores.jsonl
 ```
 
 A `pass` claim is valid if and only if you can reproduce it
@@ -96,6 +103,16 @@ with its recorded `reverify` commands against its saved
 
 Prefer watching before running? Replay the demo offline (no
 network): see `examples/demo-quota3/README.md`.
+
+## Prompt examples
+
+| Goal | Example prompt |
+|------|----------------|
+| Find journals | "Find me <N> journals about <TOPIC> and save everything neatly in our repo, please."<br>*"Carikan aku <N> jurnal tentang <TOPIC> dan simpan semuanya dengan rapi di repo kita ya."* |
+| Check my results | "Can you check whether the journals we gathered are valid? Just report, don't change anything."<br>*"Bisa cek jurnal yang sudah kita kumpulkan valid atau tidak? Laporkan saja, jangan ubah apa-apa."* |
+| Combine results | "I already have journals from several sources. Please combine them into one final result."<br>*"Aku sudah punya jurnal dari beberapa sumber. Tolong gabungkan jadi satu hasil akhir."* |
+| Score relevance | "Are these journals really relevant to my topic? Please score each one for me."<br>*"Jurnal-jurnal ini benar-benar relevan dengan topikku? Tolong nilai satu per satu."* |
+| Continue searching | "Please continue my last search, I still need more journals."<br>*"Tolong lanjutkan pencarian terakhirku, aku masih butuh jurnal lagi."* |
 
 ## Use
 
@@ -109,9 +126,11 @@ An agent follows it top to bottom; no other reading order is needed.
 - `examples/journal-contract.md`: a filled input-contract example.
 - `examples/demo-quota3/`: a complete quota-3 task with a
   byte-exact replay check (`tests/run.sh`, section 17).
-- `scripts/vds.py`: offline task tool (`init`, `validate`,
-  `merge`, `package`; run with `--help`, which is authoritative).
-- `tests/run.sh`: unit tests for `vds.py` (no network).
+- `scripts/vds.py`: task tool (`init`, `validate`, `merge`,
+  `package` offline; `ask jev` online, needs your OpenRouter key;
+  run with `--help`, which is authoritative).
+- `tests/run.sh`: unit tests for `vds.py` (mocked decisions
+  server on loopback only; no live network).
 
 ## Layout
 
@@ -120,7 +139,7 @@ SKILL.md                  skill body (start here)
 README.md                 this file
 CHANGELOG.md              release history
 CONTRIBUTING.md           adding source cards, PR/issue templates
-scripts/vds.py            init + validate + merge + package (stdlib-only, offline)
+scripts/vds.py            init + validate + merge + package + ask (stdlib-only; ask online)
 tests/                    fixtures + expected outputs + run.sh
 templates/                source-guide skeleton, record + manifest schemas
 references/               per-source protocol cards (20) + request budgets
@@ -136,3 +155,19 @@ artifact. No evidence = not counted.
 ## License
 
 MIT — see `LICENSE`. Copyright 2026 matkumatmat.
+
+---
+
+## ⭐ Star History
+
+If very-deep-search helps your agents gather verified literature, give us a star! ⭐
+
+<div align="center">
+  <a href="https://star-history.com/#matkumatmat/very-deep-search&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=matkumatmat/very-deep-search&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=matkumatmat/very-deep-search&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=matkumatmat/very-deep-search&type=Date" />
+    </picture>
+  </a>
+</div>

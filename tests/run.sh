@@ -355,4 +355,165 @@ need "init-mintiera-val" '"min_tier_a": 1' "$(cat "$TMP/t4/contract.json")"
   > /dev/null 2>&1
 check "init-mintiera-bad-exit" 2 "$?"
 
+# 20. ask jev: mocked decisions server, no live key, no network beyond loopback
+printf 'DUMMY-KEY-FOR-MOCKED-TESTS' > "$TMP/jev.key"
+printf 'ok' > "$TMP/jev.mode"
+cat > "$TMP/jev-mock.py" <<'EOF'
+import json, sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+fixture = json.load(open(sys.argv[1]))
+logpath, modepath, portpath = sys.argv[2], sys.argv[3], sys.argv[4]
+mode_state = ["ok", 0]
+class H(BaseHTTPRequestHandler):
+    def do_POST(self):
+        if self.path != "/api/alpha/decisions":
+            self.send_response(404)
+            self.end_headers()
+            return
+        length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(length).decode("utf-8"))
+        with open(logpath, "a", encoding="utf-8") as f:
+            f.write(json.dumps(body, sort_keys=True) + "\n")
+        with open(modepath, encoding="utf-8") as f:
+            mode = f.read().strip()
+        if mode != mode_state[0]:
+            mode_state[0] = mode
+            mode_state[1] = 0
+        if mode == "fail-twice" and mode_state[1] < 2:
+            mode_state[1] += 1
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b"boom")
+            return
+        title = body["state"]["title"]
+        resp = json.loads(json.dumps(fixture))
+        if "Borderline" in title:
+            score, conf, noul, cost = 5.0, 0.55, 0.6, 0.00002
+        elif "Offtopic" in title:
+            score, conf, noul, cost = 2.0, 0.8, 0.1, 0.00001
+        elif "seventy" in title:
+            score, conf, noul, cost = 6.3, 0.7, 0.8, 0.00002
+        elif "fifty" in title:
+            score, conf, noul, cost = 4.5, 0.7, 0.8, 0.00002
+        else:
+            score, conf, noul, cost = 7.2, 0.94, 0.9, 0.00003
+        resp["answers"]["relevance"]["score"] = score
+        resp["answers"]["relevance"]["confidence"] = conf
+        resp["answers"]["meets_scope"]["noul"] = noul
+        resp["usage"]["cost"] = cost
+        payload = json.dumps(resp).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+    def log_message(self, *args):
+        pass
+srv = HTTPServer(("127.0.0.1", 0), H)
+with open(portpath, "w", encoding="utf-8") as f:
+    f.write(str(srv.server_address[1]))
+srv.serve_forever()
+EOF
+: > "$TMP/jev-requests.jsonl"
+python3 "$TMP/jev-mock.py" "$FIX/jev-response.json" "$TMP/jev-requests.jsonl" \
+  "$TMP/jev.mode" "$TMP/jev.port" > "$TMP/jev-mock.log" 2>&1 &
+JEVPID=$!
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  [ -f "$TMP/jev.port" ] && break
+  sleep 0.2
+done
+[ -f "$TMP/jev.port" ] || { echo "FAIL: mock server did not start"; exit 1; }
+JEVBASE="http://127.0.0.1:$(cat "$TMP/jev.port")"
+OUT="$(VDS_JEV_ENDPOINT="$JEVBASE" "$VDS" ask jev --package "$FIX/jev-package" \
+  --topic "widgets and gadgets" --scope "I1: assembly studies with measured outcomes" \
+  --key-file "$TMP/jev.key" --out "$TMP/scores.jsonl")"
+check "ask-exit" 0 "$?"
+need "ask-band-relevant" "band=relevant" "$OUT"
+need "ask-band-borderline" "band=borderline" "$OUT"
+need "ask-band-offtopic" "band=off-topic" "$OUT"
+need "ask-band-70" "score=70.0 band=relevant" "$OUT"
+need "ask-band-50" "score=50.0 band=borderline" "$OUT"
+need "ask-uncertain" "uncertain" "$OUT"
+need "ask-scope-no" "scope=no" "$OUT"
+need "ask-skipped-tierb" "skipped=1" "$OUT"
+need "ask-cost" "total_cost=" "$OUT"
+[ "$(wc -l < "$TMP/scores.jsonl")" = "5" ] || {
+  echo "FAIL: sidecar should have 5 rows"; exit 1; }
+CHECKS=$((CHECKS + 1))
+echo "ok: ask-sidecar-rows"
+for val in '"score_100": 80.0' '"score_100": 55.6' '"score_100": 22.2' \
+  '"meets_scope": false' '"confidence": 0.55'; do
+  need "ask-sidecar:$val" "$val" "$(cat "$TMP/scores.jsonl")"
+done
+need "ask-req-model" '"model": "typesafe/jev-1.14"' \
+  "$(cat "$TMP/jev-requests.jsonl")"
+NCRIT="$(python3 -c "
+import json
+bodies = [json.loads(l) for l in open('$TMP/jev-requests.jsonl')]
+print(min(len(b['questions']['relevance']['criteria']) for b in bodies))")"
+[ "$NCRIT" = "10" ] || { echo "FAIL: criteria cap (got $NCRIT)"; exit 1; }
+CHECKS=$((CHECKS + 1))
+echo "ok: ask-criteria-cap"
+OUT2="$(VDS_JEV_ENDPOINT="$JEVBASE" "$VDS" ask jev --package "$FIX/jev-package" \
+  --topic "widgets and gadgets" --scope "I1" --key-file "$TMP/jev.key" \
+  --out "$TMP/scores-trunc.jsonl" --abstract-chars 40)"
+check "ask-trunc-exit" 0 "$?"
+MAXABS="$(python3 -c "
+import json
+bodies = [json.loads(l) for l in open('$TMP/jev-requests.jsonl')]
+print(max(len(b['state']['abstract']) for b in bodies[-5:]))")"
+[ "$MAXABS" -le 40 ] || { echo "FAIL: abstract truncation ($MAXABS)"; exit 1; }
+CHECKS=$((CHECKS + 1))
+echo "ok: ask-abstract-trunc"
+HITS_BEFORE="$(wc -l < "$TMP/jev-requests.jsonl")"
+cp "$TMP/scores.jsonl" "$TMP/scores-first.jsonl"
+OUT3="$(VDS_JEV_ENDPOINT="$JEVBASE" "$VDS" ask jev --package "$FIX/jev-package" \
+  --topic "widgets and gadgets" --scope "I1" --key-file "$TMP/jev.key" \
+  --out "$TMP/scores.jsonl")"
+check "ask-resume-exit" 0 "$?"
+if cmp -s "$TMP/scores-first.jsonl" "$TMP/scores.jsonl"; then
+  CHECKS=$((CHECKS + 1))
+  echo "ok: ask-resume-bytes"
+else
+  echo "FAIL: resume rewrote different bytes"
+  exit 1
+fi
+need "ask-resume-cached" "fresh=0 cached=5" "$OUT3"
+HITS_AFTER="$(wc -l < "$TMP/jev-requests.jsonl")"
+[ "$HITS_BEFORE" = "$HITS_AFTER" ] || {
+  echo "FAIL: resume made fresh calls"; exit 1; }
+CHECKS=$((CHECKS + 1))
+echo "ok: ask-resume-nocall"
+printf 'fail-twice' > "$TMP/jev.mode"
+OUT4="$(VDS_JEV_ENDPOINT="$JEVBASE" "$VDS" ask jev --package "$FIX/jev-package" \
+  --topic "widgets and gadgets" --scope "I1" --key-file "$TMP/jev.key" \
+  --out "$TMP/scores-retry.jsonl")"
+check "ask-retry-exit" 0 "$?"
+printf 'ok' > "$TMP/jev.mode"
+env -u OPENROUTER_API_KEY "$VDS" ask jev --package "$FIX/jev-package" \
+  --topic "t" --scope "s" --out "$TMP/nokey.jsonl" > /dev/null 2>&1
+check "ask-nokey-exit" 2 "$?"
+"$VDS" ask router --package "$FIX/jev-package" --topic "t" --scope "s" \
+  --key-file "$TMP/jev.key" --out "$TMP/x.jsonl" > /dev/null 2>&1
+check "ask-badbackend-exit" 2 "$?"
+"$VDS" ask jev --package "$FIX" --topic "t" --scope "s" \
+  --key-file "$TMP/jev.key" --out "$TMP/y.jsonl" > "$TMP/ask-dirty.log" 2>&1
+check "ask-dirty-exit" 1 "$?"
+need "ask-dirty-refused" "ask refused" "$(cat "$TMP/ask-dirty.log")"
+mkdir -p "$TMP/pdfpkg/evidence"
+printf 'not a real pdf' > "$TMP/pdfpkg/evidence/r.pdf"
+python3 -c "
+import json
+r = dict(json.loads(open('$FIX/jev-package/final.jsonl').readline()))
+r['evidence_ref'] = 'evidence/r.pdf'
+open('$TMP/pdfpkg/final.jsonl', 'w').write(json.dumps(r) + chr(10))"
+mkdir -p "$TMP/emptybin"
+PYBIN="$(command -v python3)"
+PATH="$TMP/emptybin" VDS_JEV_ENDPOINT="$JEVBASE" "$PYBIN" "$VDS" ask jev \
+  --package "$TMP/pdfpkg" --topic "t" --scope "s" --key-file "$TMP/jev.key" \
+  --out "$TMP/z.jsonl" > "$TMP/ask-pdf.log" 2>&1
+check "ask-pdfnopdftotext-exit" 1 "$?"
+need "ask-pdfnopdftotext-msg" "pdftotext not found" "$(cat "$TMP/ask-pdf.log")"
+kill "$JEVPID" 2>/dev/null
+
 echo "ALL UNIT TESTS PASSED ($CHECKS checks)"

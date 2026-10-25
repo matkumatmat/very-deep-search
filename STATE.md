@@ -5,15 +5,17 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 5 — COMPLETE (12/12 blind-verified, matrix 12/12, tiers live)
-- status: batches A+B+C committed (d533d67/25ad80f/c2436a8); PHASE5-READY sent; push NOT approved
-- updated: 2026-10-25 (batch session)
+- phase: 6 — ask jev implemented, awaiting commit approval
+- status: vds ask jev + SKILL/README docs + mascot + prompt table + 31 mocked tests done, gates green; P6-README2 replying; v1.1.0 pushed (f9d4bf5)
+- updated: 2026-10-25 (phase 6 session)
 
-## Phase 6 candidate (recorded, NOT this phase)
+## Phase 6 (ACTIVE since 2026-10-25): `vds ask jev`
 
-- Serious-user pipeline: gathered PDFs × model-based relevance
-  quantification scored against the user context from abstracts.
-  Logged per human order 2026-10-25; design not started.
+- Model-scored relevance: Tier-A finals × decisions endpoint
+  (`typesafe/jev-1.14`, 10-level scale + scope yes/no),
+  validated on 201 real records before implementation.
+  Implemented 2026-10-25: cmd_ask + SKILL §11 docs + 31
+  mocked tests (103 total); gates green; awaiting approval.
 
 ## Standing constraints
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """vds - scaffold, validate, merge, and package very-deep-search tasks.
 
-Standard library only. Offline. Deterministic: the same inputs always
-produce byte-identical outputs.
+Standard library only. Offline and deterministic, except `ask`, which
+calls one pinned online decisions endpoint (see JEV_ENDPOINT).
 
 Schema (one JSON object per line):
   identifier   canonical ID, lowercase-normalized for dedup (required,
@@ -26,8 +26,13 @@ code signals the verdict.
 import argparse
 import json
 import os
+import re
 import shutil
+import subprocess
 import sys
+import time
+import urllib.error
+import urllib.request
 
 REQUIRED_FIELDS = (
     "identifier",
@@ -842,6 +847,364 @@ def cmd_package(args):
     return 0
 
 
+JEV_ENDPOINT = "https://openrouter.ai/api/alpha/decisions"
+JEV_MODEL = "typesafe/jev-1.14"
+JEV_PATH = "/api/alpha/decisions"
+JEV_KEY_ENV = "OPENROUTER_API_KEY"
+JEV_MAX_ATTEMPTS = 3
+JEV_TIMEOUT_SECS = 30
+JEV_RETRY_SLEEP_SECS = (1, 2)
+JEV_ABSTRACT_CHARS_DEFAULT = 1500
+
+JEV_RELEVANCE_LEVELS = (
+    "Unrelated: shares no subject matter with the topic.",
+    "Adjacent field only: same broad discipline, different subject.",
+    "Shared vocabulary, different problem: keywords overlap but the "
+    "study addresses another question.",
+    "Background context: useful setting for the topic, no direct findings.",
+    "Partially relevant: touches one aspect of the scope without evidence.",
+    "Moderately relevant: addresses the topic with limited or indirect "
+    "evidence.",
+    "Relevant: directly studies the topic with supporting data.",
+    "Strongly relevant: core findings answer part of the scope.",
+    "Highly relevant: central to the topic and scope with solid evidence.",
+    "Definitive: directly answers the scope question with strong evidence.",
+)
+JEV_RELEVANCE_INSTRUCTIONS = (
+    "How relevant is this record's content to the research topic and scope?"
+)
+JEV_SCOPE_INSTRUCTIONS = "Does this record fall inside the stated scope?"
+JEV_SCOPE_TRUE = "The record's subject and findings fall inside the scope."
+JEV_SCOPE_FALSE = "The record falls outside the stated scope."
+
+DOI_RE = re.compile(r"^10\.\d{4,}/\S+$")
+
+
+def jev_band(score_100):
+    if score_100 >= 70:
+        return "relevant"
+    if score_100 >= 50:
+        return "borderline"
+    return "off-topic"
+
+
+def jev_endpoint_url():
+    """Pinned decisions endpoint. VDS_JEV_ENDPOINT overrides the base URL
+    for mocked tests only; the API path stays pinned."""
+    base = os.environ.get("VDS_JEV_ENDPOINT")
+    if base:
+        return base.rstrip("/") + JEV_PATH
+    return JEV_ENDPOINT
+
+
+def jev_request_body(topic, scope, title, abstract):
+    return {
+        "model": JEV_MODEL,
+        "state": {
+            "topic": topic,
+            "scope": scope,
+            "title": title,
+            "abstract": abstract,
+        },
+        "questions": {
+            "relevance": {
+                "type": "score",
+                "instructions": JEV_RELEVANCE_INSTRUCTIONS,
+                "criteria": list(JEV_RELEVANCE_LEVELS),
+            },
+            "meets_scope": {
+                "type": "noul",
+                "instructions": JEV_SCOPE_INSTRUCTIONS,
+                "criteria": {"true": JEV_SCOPE_TRUE, "false": JEV_SCOPE_FALSE},
+            },
+        },
+    }
+
+
+def jev_call_once(url, key, body):
+    payload = json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "Authorization": "Bearer " + key,
+            "Content-Type": "application/json",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=JEV_TIMEOUT_SECS) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def jev_transient(exc):
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in (408, 429, 500, 502, 503, 504)
+    return isinstance(exc, urllib.error.URLError)
+
+
+def jev_call(url, key, body):
+    """Call the decisions endpoint with retries. Returns the parsed
+    response, or raises RuntimeError after transient retries."""
+    last = None
+    for attempt in range(JEV_MAX_ATTEMPTS):
+        try:
+            return jev_call_once(url, key, body)
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code == 401:
+                raise RuntimeError("unauthorized (HTTP 401): check the key")
+            if not jev_transient(exc):
+                raise RuntimeError("decisions HTTP %d" % (exc.code,))
+        except (urllib.error.URLError, ValueError) as exc:
+            last = exc
+        if attempt < JEV_MAX_ATTEMPTS - 1:
+            time.sleep(JEV_RETRY_SLEEP_SECS[attempt])
+    raise RuntimeError("decisions call failed after %d attempts: %s"
+                       % (JEV_MAX_ATTEMPTS, last))
+
+
+def jev_parse_response(resp):
+    """Parse one decisions response into a score dict. Raises ValueError
+    on any contract violation."""
+    if not isinstance(resp, dict):
+        raise ValueError("response is not a JSON object")
+    answers = resp.get("answers")
+    if not isinstance(answers, dict):
+        raise ValueError("response has no answers object")
+    rel = answers.get("relevance")
+    if not isinstance(rel, dict) or rel.get("type") != "score":
+        raise ValueError("missing relevance score answer")
+    score = rel.get("score")
+    if isinstance(score, bool) or not isinstance(score, (int, float)):
+        raise ValueError("relevance score is not a number")
+    if score < 0 or score > 9:
+        raise ValueError("relevance score out of range 0-9")
+    conf = rel.get("confidence")
+    if conf is not None and (
+        isinstance(conf, bool) or not isinstance(conf, (int, float))
+    ):
+        raise ValueError("relevance confidence is not a number")
+    scope = answers.get("meets_scope")
+    if not isinstance(scope, dict) or scope.get("type") != "noul":
+        raise ValueError("missing meets_scope noul answer")
+    prob = scope.get("noul")
+    if isinstance(prob, bool) or not isinstance(prob, (int, float)):
+        raise ValueError("meets_scope noul is not a number")
+    usage = resp.get("usage")
+    cost = None
+    if isinstance(usage, dict) and usage.get("cost") is not None:
+        cost = usage["cost"]
+        if isinstance(cost, bool) or not isinstance(cost, (int, float)):
+            raise ValueError("usage cost is not a number")
+    return {
+        "score_100": round(score / 9 * 100, 1),
+        "confidence": conf,
+        "meets_scope": prob >= 0.5,
+        "model": resp.get("model") or JEV_MODEL,
+        "cost": cost,
+    }
+
+
+def jev_extract_doi(record):
+    ident = record.get("identifier", "")
+    if isinstance(ident, str) and DOI_RE.match(ident.strip()):
+        return ident.strip()
+    url = record.get("source_url", "")
+    if isinstance(url, str) and "doi.org/" in url:
+        tail = url.split("doi.org/", 1)[1].split()[0]
+        tail = tail.split("?")[0].split("#")[0].strip().rstrip("/")
+        if DOI_RE.match(tail):
+            return tail
+    return ""
+
+
+def jev_extract_text(evidence_path):
+    """Extract scoring text from an evidence file. Returns (text, error)."""
+    try:
+        with open(evidence_path, "rb") as handle:
+            raw = handle.read()
+    except OSError as exc:
+        return ("", "cannot read evidence: %s" % (exc,))
+    if evidence_path.lower().endswith(".pdf"):
+        pdftotext = shutil.which("pdftotext")
+        if not pdftotext:
+            return ("", "pdftotext not found: cannot extract PDF text")
+        try:
+            proc = subprocess.run(
+                [pdftotext, evidence_path, "-"],
+                capture_output=True,
+                timeout=60,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            return ("", "pdftotext failed: %s" % (exc,))
+        if proc.returncode != 0:
+            return ("", "pdftotext failed (exit %d)" % (proc.returncode,))
+        raw = proc.stdout
+    text = " ".join(raw.decode("utf-8", errors="replace").split())
+    if not text:
+        return ("", "evidence has no extractable text")
+    return (text, "")
+
+
+def jev_read_key(key_file):
+    if key_file:
+        try:
+            with open(key_file, "r", encoding="utf-8") as handle:
+                key = handle.read().strip()
+        except OSError as exc:
+            return ("", "cannot read key file: %s" % (exc,))
+        if not key:
+            return ("", "key file is empty")
+        return (key, "")
+    key = os.environ.get(JEV_KEY_ENV, "").strip()
+    if not key:
+        return ("", "no key: pass --key-file or set %s" % (JEV_KEY_ENV,))
+    return (key, "")
+
+
+def jev_load_scored(out_path):
+    """Load already-scored rows keyed by identifier. Missing file means
+    nothing scored yet. Returns (rows, error)."""
+    rows = {}
+    try:
+        handle = open(out_path, "r", encoding="utf-8")
+    except FileNotFoundError:
+        return (rows, "")
+    except OSError as exc:
+        return (rows, "cannot read output: %s" % (exc,))
+    with handle:
+        for lineno, text in iter_jsonl_lines(handle):
+            try:
+                obj = json.loads(text)
+            except json.JSONDecodeError as exc:
+                return (rows, "output line %d: invalid JSON: %s"
+                        % (lineno, exc))
+            ident = obj.get("identifier") if isinstance(obj, dict) else None
+            if not is_nonempty_str(ident):
+                return (rows, "output line %d: missing identifier" % (lineno,))
+            rows[norm_key(ident)] = obj
+    return (rows, "")
+
+
+def cmd_ask(args):
+    if args.backend != "jev":
+        sys.stdout.write("ask: unknown backend %r (only 'jev')\n"
+                         % (args.backend,))
+        return 2
+    if args.abstract_chars < 1:
+        sys.stdout.write("ask: --abstract-chars must be >= 1\n")
+        return 2
+    key, err = jev_read_key(args.key_file)
+    if err:
+        sys.stdout.write("ask: %s\n" % (err,))
+        return 2
+    if len(JEV_RELEVANCE_LEVELS) != 10:
+        sys.stdout.write("ask: relevance criteria must be exactly 10 levels "
+                         "(API limit)\n")
+        return 2
+    package = args.package
+    final_path = os.path.join(package, "final.jsonl")
+    out_lines = []
+    _, _, _, n_err = validate_file(final_path, "final.jsonl", package,
+                                   out_lines)
+    if n_err:
+        out_lines.append("ask refused: final.jsonl has %d errors; "
+                         "fix them before spending scoring calls" % (n_err,))
+        sys.stdout.write("\n".join(out_lines) + "\n")
+        return 1
+    records = []
+    with open(final_path, "r", encoding="utf-8") as handle:
+        for _, text in iter_jsonl_lines(handle):
+            records.append(json.loads(text))
+    eligible, skipped = [], 0
+    for record in records:
+        if record.get("decision") == "pass" and record.get("tier") == "A":
+            eligible.append(record)
+        else:
+            skipped += 1
+    if not eligible:
+        sys.stdout.write("ask jev: no Tier-A passes to score "
+                         "(skipped=%d)\n" % (skipped,))
+        return 0
+    abstracts = []
+    for record in eligible:
+        rel = record["evidence_ref"].strip()
+        full = rel if os.path.isabs(rel) else os.path.join(package, rel)
+        text, err = jev_extract_text(full)
+        if err:
+            sys.stdout.write("ask: %s: %s\n" % (record["identifier"], err))
+            return 1
+        abstracts.append(text[:args.abstract_chars])
+    scored, err = jev_load_scored(args.out)
+    if err:
+        sys.stdout.write("ask: %s\n" % (err,))
+        return 1
+    try:
+        appender = open(args.out, "a", encoding="utf-8")
+    except OSError as exc:
+        sys.stdout.write("ask: cannot write output: %s\n" % (exc,))
+        return 2
+    url = jev_endpoint_url()
+    rows, n_fresh = [], 0
+    with appender:
+        for record, abstract in zip(eligible, abstracts):
+            ident = record["identifier"]
+            hit = scored.get(norm_key(ident))
+            if hit is not None:
+                rows.append((ident, hit, True))
+                continue
+            body = jev_request_body(args.topic, args.scope,
+                                    record.get("title", ""), abstract)
+            try:
+                parsed = jev_parse_response(jev_call(url, key, body))
+            except (RuntimeError, ValueError) as exc:
+                sys.stdout.write("ask: %s: %s\n" % (ident, exc))
+                return 1
+            row = {"identifier": ident,
+                   "doi": jev_extract_doi(record)}
+            row.update(parsed)
+            appender.write(json.dumps(row, sort_keys=True,
+                                      ensure_ascii=False) + "\n")
+            appender.flush()
+            rows.append((ident, row, False))
+            n_fresh += 1
+    ordered = [row for _, row, _ in rows]
+    try:
+        with open(args.out, "w", encoding="utf-8") as handle:
+            for row in ordered:
+                handle.write(json.dumps(row, sort_keys=True,
+                                        ensure_ascii=False) + "\n")
+    except OSError as exc:
+        sys.stdout.write("ask: cannot rewrite output: %s\n" % (exc,))
+        return 1
+    table = ["ask jev: topic=%r eligible=%d skipped=%d"
+             % (args.topic, len(eligible), skipped)]
+    total_cost, n_cached = 0.0, 0
+    cost_known = True
+    for ident, row, cached in rows:
+        band = jev_band(row["score_100"])
+        conf = row["confidence"]
+        notes = []
+        if conf is None or conf < 0.6:
+            notes.append("uncertain")
+        if cached:
+            notes.append("cached")
+            n_cached += 1
+        if row["cost"] is None:
+            cost_known = False
+        else:
+            total_cost += row["cost"]
+        table.append("%s score=%s band=%s conf=%s scope=%s%s" % (
+            ident, row["score_100"], band, conf,
+            "yes" if row["meets_scope"] else "no",
+            " " + " ".join(notes) if notes else "",
+        ))
+    table.append("ask jev: fresh=%d cached=%d total_cost=%s"
+                 % (n_fresh, n_cached,
+                    round(total_cost, 6) if cost_known else "n/a"))
+    sys.stdout.write("\n".join(table) + "\n")
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="vds.py",
@@ -973,6 +1336,33 @@ def build_parser():
         help="clear a non-empty output directory first",
     )
     p_pkg.set_defaults(func=cmd_package)
+    p_ask = sub.add_parser(
+        "ask", help="score Tier-A finals for relevance (online, key needed)"
+    )
+    p_ask.add_argument(
+        "backend", choices=["jev"],
+        help="scoring backend (only 'jev')",
+    )
+    p_ask.add_argument(
+        "--package", required=True, help="package directory (final.jsonl)"
+    )
+    p_ask.add_argument("--topic", required=True, help="research topic")
+    p_ask.add_argument(
+        "--scope", required=True, help="scope statement scored against"
+    )
+    p_ask.add_argument(
+        "--key-file", default=None,
+        help="file holding the OpenRouter key (or set OPENROUTER_API_KEY)",
+    )
+    p_ask.add_argument(
+        "--out", required=True, help="scores sidecar JSONL to write"
+    )
+    p_ask.add_argument(
+        "--abstract-chars", type=int,
+        default=JEV_ABSTRACT_CHARS_DEFAULT,
+        help="evidence text chars sent per record (default: 1500)",
+    )
+    p_ask.set_defaults(func=cmd_ask)
     return parser
 
 
