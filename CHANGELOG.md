@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.1 — pre-flight email hardening + portability docs
+
+- §2 gate now MANDATORY + BLOCKING (explicit provide-or-decline
+  before gathering); suggest a secondary real address when the
+  user is reluctant; state the measured no-email cost (Unpaywall
+  lane zero, anonymous pools ~3 req/s, fewer Tier-A).
+- §2 email table: CROSSREF row (recommended; mailto UA routes
+  to the polite pool, anonymous slow + 429-prone).
+- README: portability callout (local runner with shell +
+  network + file writes required; web-chat sandboxes do
+  contract + screening only, cannot verify/package;
+  2026-10-26 Claude web transcript evidence).
+- README: Claude Code status corrected to measured truth
+  (symlink + discovery verified; execution smoke-tested via
+  OpenRouter free model; full pipeline untested).
+
 ## 1.3.0 — pre-flight interview gate (Phase 7)
 
 - SKILL.md §2 `contact_email` gate: before gathering, the agent

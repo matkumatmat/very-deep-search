@@ -22,6 +22,7 @@ run `finalize!` from another checkout.
 ## Working rules
 
 - Lanes own disjoint file sets; coordinator merges. Follow PROJECT.md lanes.
+- Always writing in english communicating with user on indonesia.
 - English, generic, no absolute paths, no secrets — every file, every commit.
 - No evidence = not counted. Deterministic artifacts only.
 - Tests before claims: unit (`tests/run.sh`), skill validate, sanitization

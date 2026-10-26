@@ -9,6 +9,13 @@ collect candidates from many sources, verify each through two
 independent layers with saved evidence, merge deterministically,
 adjudicate disagreements, and package a verifiable final set.
 
+> Portability: needs a local runner with shell + network +
+> file writes (Muse Code, Claude Code, OpenCode). Web-chat
+> sandboxes (Claude.ai, ChatGPT) can do the contract +
+> candidate screening only — they cannot run verification or
+> package evidence (2026-10-26 Claude web transcript: DNS
+> failed on all science APIs, no evidence writes).
+
 ## Install
 
 One artifact installs into all three harnesses. Replace
@@ -36,8 +43,8 @@ ls ~/.agents/skills/very-deep-search/SKILL.md
 Restart OpenCode; the skill appears in its skill list. (Verified:
 a fresh agent session listed it with the correct description.)
 
-Claude Code (symlink verified; discovery expected, untested —
-no logged-in CLI here to restart):
+Claude Code (symlink + discovery verified; execution
+smoke-tested via OpenRouter free model, full pipeline untested):
 
 ```sh
 ln -s <path-to>/very-deep-search ~/.claude/skills/very-deep-search
@@ -57,7 +64,7 @@ the same id, the `~/.agents` copy is silently skipped.
 | --- | --- | --- | --- |
 | Muse Code | verified (`muse skills install`) | verified (`muse skills validate`) | verified (`tests/run.sh`) |
 | OpenCode | verified (symlink + live discovery) | verified* (same validate via shell) | verified* (same `run.sh` via shell) |
-| Claude Code | expected, untested (placement OK; needs logged-in restart) | verified* (same validate via shell) | verified* (same `run.sh` via shell) |
+| Claude Code | verified (symlink + discovery); execution smoke-tested (OpenRouter free model), full pipeline untested | verified* (same validate via shell) | verified* (same `run.sh` via shell) |
 
 `*` Harness-independent: `vds.py` needs Python 3 (stdlib only)
 and `run.sh` needs `sh` — no harness agent involved.

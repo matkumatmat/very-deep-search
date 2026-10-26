@@ -59,9 +59,20 @@ Do not start gathering until all of these are fixed:
   | Source | Need | Why |
   | UNPAYWALL | REQUIRED | `?email=` param; missing/invalid -> HTTP 422; disposable/example.com rejected |
   | OPENALEX | recommended | `mailto:` UA unlocks the polite pool; tight limits without it |
-  (c) ask the user for the address; (d) on decline, skip or
-  proxy those lanes BY EXPLICIT DECISION and record it in the
-  contract `notes` — never a surprise mid-run failure. Machine
+  | CROSSREF | recommended | mailto UA routes to the polite pool; anonymous slow + 429-prone (see CROSSREF.md) |
+  (c) ask the user for the address — MANDATORY and BLOCKING:
+  do not start gathering until the user explicitly provides
+  one or explicitly declines (no silent skip). If the user is
+  reluctant, suggest a secondary real address instead of the
+  main inbox — it must still be real and contactable, because
+  disposable/`example.com` addresses get HTTP 422. State the
+  consequence explicitly: without an email the Unpaywall lane
+  yields zero (measured 20/20 lost in a dry run) and
+  OpenAlex/Crossref drop to slow anonymous pools (~3 req/s,
+  429-prone) — expect significantly fewer Tier-A finals and
+  more Tier-B. (d) On explicit decline, skip or proxy those
+  lanes BY EXPLICIT DECISION and record it in the contract
+  `notes` — never a surprise mid-run failure. Machine
   channel: the `VDS_CONTACT_EMAIL` env var. PII hygiene: the
   address travels via env only and is NEVER persisted into
   lane files.

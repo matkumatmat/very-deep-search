@@ -5,8 +5,8 @@ memory a fresh session has.
 
 ## Current
 
-- phase: 7 — pre-flight interview gate implemented, awaiting commit approval
-- status: SKILL §2 contact_email gate + VDS_CONTACT_EMAIL + 2 card cross-refs done, gates green; P7-INT replying
+- phase: 7 — RELEASED as v1.3.0 (98243ac, tag pushed, live on origin)
+- status: pre-flight interview gate + VDS_CONTACT_EMAIL shipped; tree has local STATE-only change, uncommitted
 - updated: 2026-10-25 (phase 7 session)
 
 ## Phase 6 (ACTIVE since 2026-10-25): `vds ask jev`
