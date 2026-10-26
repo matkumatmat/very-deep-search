@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""vds - scaffold, validate, merge, and package very-deep-search tasks.
+"""vds - scaffold, validate, merge, package, and report very-deep-search tasks.
 
 Standard library only. Offline and deterministic, except `ask`, which
 calls one pinned online decisions endpoint (see JEV_ENDPOINT).
@@ -20,7 +20,9 @@ Schema (one JSON object per line):
 
 Exit codes: 0 = clean, 1 = data errors found (or merge refused),
 2 = bad usage. Findings go to stdout as one report stream; the exit
-code signals the verdict.
+code signals the verdict. `report` prints everything printable
+and lists validation errors (exit 1); it refuses with no report
+only when required files are missing or inputs do not parse.
 """
 
 import argparse
@@ -847,6 +849,248 @@ def cmd_package(args):
     return 0
 
 
+def cmd_report(args):
+    pkg = args.package
+    final_path = os.path.join(pkg, "final.jsonl")
+    manifest_path = os.path.join(pkg, "manifest.jsonl")
+    merged_path = os.path.join(pkg, "merged.jsonl")
+    contract_path = os.path.join(pkg, "contract.json")
+    if not os.path.isfile(final_path):
+        sys.stdout.write(
+            "report refused: %s has no final.jsonl\n" % (pkg,)
+        )
+        return 1
+    if not os.path.isfile(manifest_path):
+        sys.stdout.write(
+            "report refused: %s has no manifest.jsonl\n" % (pkg,)
+        )
+        return 1
+    parse_errs = []
+    final_rows, ok_f = load_jsonl_rows(
+        final_path, final_path, parse_errs
+    )
+    merged_present = os.path.isfile(merged_path)
+    merged_rows = []
+    ok_m = True
+    if merged_present:
+        merged_rows, ok_m = load_jsonl_rows(
+            merged_path, merged_path, parse_errs
+        )
+    manifest_rows, ok_man = load_jsonl_rows(
+        manifest_path, manifest_path, parse_errs
+    )
+    if not (ok_f and ok_m and ok_man):
+        parse_errs.append("report refused: inputs do not parse")
+        sys.stdout.write("\n".join(parse_errs) + "\n")
+        return 1
+    errors = []
+    _, _, _, _ = validate_file(final_path, final_path, pkg, errors)
+    if merged_present:
+        _, _, _, _ = validate_file(merged_path, merged_path, pkg, errors)
+    ev_dir = os.path.join(pkg, "evidence")
+    for lineno, obj in manifest_rows:
+        for err in validate_manifest_row(obj, ev_dir):
+            errors.append("%s:%d: %s" % (manifest_path, lineno, err))
+    contract = None
+    contract_present = os.path.isfile(contract_path)
+    contract_broken = False
+    if contract_present:
+        try:
+            with open(contract_path, "r", encoding="utf-8") as handle:
+                contract = json.load(handle)
+        except (OSError, ValueError) as exc:
+            errors.append("%s: cannot load: %s" % (contract_path, exc))
+            contract_broken = True
+    quota_total = per_source = min_a = None
+    sources = []
+    quota_ok = False
+    if isinstance(contract, dict):
+        quota = contract.get("quota", {})
+        total = quota.get("total") if isinstance(quota, dict) else None
+        per = quota.get("per_source") if isinstance(quota, dict) else None
+        raw_min = contract.get("min_tier_a", total)
+        raw_sources = contract.get("source_registry", [])
+        if (
+            isinstance(total, int)
+            and not isinstance(total, bool)
+            and isinstance(per, int)
+            and not isinstance(per, bool)
+            and isinstance(raw_min, int)
+            and not isinstance(raw_min, bool)
+            and isinstance(raw_sources, list)
+            and all(is_nonempty_str(s) for s in raw_sources)
+        ):
+            quota_total, per_source, min_a = total, per, raw_min
+            sources = [s.strip() for s in raw_sources]
+            quota_ok = True
+    if contract_present and not contract_broken and not quota_ok:
+        errors.append(
+            "%s: malformed quota fields "
+            "(need integer total/per_source/min_tier_a)" % (contract_path,)
+        )
+    quota_known = contract_present and not contract_broken and quota_ok
+    n_pass = n_reject = n_a = n_b = 0
+    for _, obj in final_rows:
+        if not isinstance(obj, dict):
+            continue
+        if obj.get("decision") == "pass":
+            n_pass += 1
+            if obj.get("tier") == "A":
+                n_a += 1
+            elif obj.get("tier") == "B":
+                n_b += 1
+        elif obj.get("decision") == "reject":
+            n_reject += 1
+    m_pass = m_reject = 0
+    for _, obj in merged_rows:
+        if not isinstance(obj, dict):
+            continue
+        if obj.get("decision") == "pass":
+            m_pass += 1
+        elif obj.get("decision") == "reject":
+            m_reject += 1
+    m_rel = m_nrel = m_fail = 0
+    for _, obj in manifest_rows:
+        if not isinstance(obj, dict):
+            continue
+        verdict = obj.get("verdict")
+        if verdict == "relevant":
+            m_rel += 1
+        elif verdict == "not_relevant":
+            m_nrel += 1
+        elif verdict == "download_failed":
+            m_fail += 1
+    if not quota_known:
+        verdict = "UNKNOWN"
+        if not contract_present:
+            detail = "contract.json not in package: quota unknown"
+        else:
+            detail = "contract.json unusable: quota unknown"
+    else:
+        a_mark = "MET" if n_a >= min_a else "SHORTFALL"
+        t_mark = "MET" if n_pass >= quota_total else "SHORTFALL"
+        detail = "tier_a %d/%d %s; total %d/%d %s" % (
+            n_a,
+            min_a,
+            a_mark,
+            n_pass,
+            quota_total,
+            t_mark,
+        )
+        verdict = "MET" if a_mark == t_mark == "MET" else "SHORTFALL"
+    code = 0 if verdict == "MET" and not errors else 1
+    files = []
+    for dirpath, _, filenames in os.walk(pkg):
+        for name in filenames:
+            rel = os.path.relpath(
+                os.path.join(dirpath, name), pkg
+            ).replace(os.sep, "/")
+            files.append(rel)
+    files.sort()
+    if args.format == "json":
+        payload = {
+            "package": pkg,
+            "quota": (
+                {
+                    "total": quota_total,
+                    "per_source": per_source,
+                    "min_tier_a": min_a,
+                    "sources": sources,
+                }
+                if quota_known
+                else None
+            ),
+            "counts": {
+                "final": {
+                    "pass": n_pass,
+                    "reject": n_reject,
+                    "tier_a": n_a,
+                    "tier_b": n_b,
+                },
+                "merged": (
+                    {"pass": m_pass, "reject": m_reject}
+                    if merged_present
+                    else None
+                ),
+                "manifest": {
+                    "rows": len(manifest_rows),
+                    "relevant": m_rel,
+                    "not_relevant": m_nrel,
+                    "download_failed": m_fail,
+                },
+            },
+            "per_source": (
+                {
+                    "targets": dict(
+                        (s, per_source) for s in sources
+                    ),
+                    "delivered": None,
+                    "note": (
+                        "not attributable: "
+                        "package rows carry no source field"
+                    ),
+                }
+                if quota_known
+                else None
+            ),
+            "files": files,
+            "verdict": verdict,
+            "verdict_detail": detail,
+        }
+        if errors:
+            payload["errors"] = errors
+        sys.stdout.write(
+            json.dumps(
+                payload, sort_keys=True, indent=2, ensure_ascii=False
+            )
+            + "\n"
+        )
+        return code
+    lines = []
+    lines.append("report: %s" % (pkg,))
+    if quota_known:
+        lines.append(
+            "quota: total=%d per_source=%d min_tier_a=%d sources=%s"
+            % (quota_total, per_source, min_a, ",".join(sources))
+        )
+    elif not contract_present:
+        lines.append("quota: unknown (no contract.json)")
+    else:
+        lines.append("quota: unknown (contract.json unusable)")
+    lines.append(
+        "final: pass=%d reject=%d tier_a=%d tier_b=%d"
+        % (n_pass, n_reject, n_a, n_b)
+    )
+    if merged_present:
+        lines.append("merged: pass=%d reject=%d" % (m_pass, m_reject))
+    else:
+        lines.append("merged: not provided")
+    lines.append(
+        "manifest: rows=%d relevant=%d not_relevant=%d download_failed=%d"
+        % (len(manifest_rows), m_rel, m_nrel, m_fail)
+    )
+    if quota_known:
+        lines.append(
+            "per_source: target=%d each [%s]; delivered=not attributable "
+            "(rows carry no source field)"
+            % (per_source, ",".join(sources))
+        )
+    elif not contract_present:
+        lines.append("per_source: unknown (no contract.json)")
+    else:
+        lines.append("per_source: unknown (contract.json unusable)")
+    lines.append("files:")
+    for name in files:
+        lines.append("  %s" % (name,))
+    lines.append("verdict: %s (%s)" % (verdict, detail))
+    if errors:
+        lines.append("errors:")
+        for finding in errors:
+            lines.append("  %s" % (finding,))
+    sys.stdout.write("\n".join(lines) + "\n")
+    return code
+
+
 JEV_ENDPOINT = "https://openrouter.ai/api/alpha/decisions"
 JEV_MODEL = "typesafe/jev-1.14"
 JEV_PATH = "/api/alpha/decisions"
@@ -1208,7 +1452,7 @@ def cmd_ask(args):
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="vds.py",
-        description="Scaffold, validate, merge, and package "
+        description="Scaffold, validate, merge, package, and report "
         "very-deep-search tasks. Offline, deterministic, standard "
         "library only.",
     )
@@ -1363,6 +1607,21 @@ def build_parser():
         help="evidence text chars sent per record (default: 1500)",
     )
     p_ask.set_defaults(func=cmd_ask)
+    p_rep = sub.add_parser(
+        "report",
+        help="print machine-true counts, file inventory, and quota "
+        "verdict for a package",
+    )
+    p_rep.add_argument(
+        "--package", required=True, help="package directory to report on"
+    )
+    p_rep.add_argument(
+        "--format",
+        default="text",
+        choices=["text", "json"],
+        help="output format (default: text)",
+    )
+    p_rep.set_defaults(func=cmd_report)
     return parser
 
 

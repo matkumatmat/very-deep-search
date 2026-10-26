@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.0 — formatted completion report (Unit 6)
+
+- SKILL.md §13 `Completion report`: REQUIRED template with
+  fixed headings in fixed order ((a) counts, (b) file
+  inventory, (c) gates evidence, (d) rejected/excluded
+  identifiers, (e) known gaps + follow-ups). A report
+  missing any section is incomplete; counts are pasted
+  verbatim from the tool, never hand-typed.
+- `vds.py report --package DIR [--format text|json]`:
+  machine-true counts block + file inventory + quota
+  verdict (MET/SHORTFALL per Tier-A and total legs,
+  UNKNOWN without a usable contract). Prints everything
+  printable and lists validation findings under `errors:`
+  (counts best-effort when errors present); refuses with
+  no report only when required files are missing or
+  inputs do not parse. Per-source delivered counts
+  honestly not attributable (package rows carry no
+  source field). Exit 0 quota met with no errors,
+  1 shortfall/unknown/errors/refused, 2 bad usage.
+- Tests: 103 → 131 checks (report text/json byte-exact
+  outputs, shortfall/unknown/dirty/refusal/usage cases).
+
 ## 1.3.1 — pre-flight email hardening + portability docs
 
 - §2 gate now MANDATORY + BLOCKING (explicit provide-or-decline

@@ -516,4 +516,102 @@ check "ask-pdfnopdftotext-exit" 1 "$?"
 need "ask-pdfnopdftotext-msg" "pdftotext not found" "$(cat "$TMP/ask-pdf.log")"
 kill "$JEVPID" 2>/dev/null
 
+# 21. report: machine-true counts + inventory + quota verdict for §13(a)
+mkdir -p "$TMP/reppkg/evidence" "$TMP/reppkg/ev"
+printf '# report fixture\n' > "$TMP/reppkg/README.md"
+cp "$FIX/pkg-final.jsonl" "$TMP/reppkg/final.jsonl"
+cp "$FIX/pkg-manifest.jsonl" "$TMP/reppkg/manifest.jsonl"
+cp "$FIX/pkg-contract.json" "$TMP/reppkg/contract.json"
+cp "$FIX/pkg-excluded.md" "$TMP/reppkg/excluded-from-final.md"
+cp "$FIX/pkg-needs.jsonl" "$TMP/reppkg/needs-richer-check.jsonl"
+cp "$FIX/merge-a.jsonl" "$TMP/reppkg/merged.jsonl"
+printf 'proof-alpha\n' > "$TMP/reppkg/evidence/p1.txt"
+printf 'proof-beta-ok\n' > "$TMP/reppkg/evidence/p2.txt"
+printf 'k1\n' > "$TMP/reppkg/ev/k1.txt"
+printf 'k2\n' > "$TMP/reppkg/ev/k2.txt"
+(cd "$TMP" && "$VDS" report --package reppkg > "$TMP/report.txt")
+check "report-text-exit" 0 "$?"
+if diff -u "$EXP/report-text.txt" "$TMP/report.txt" > "$TMP/report.diff"; then
+  CHECKS=$((CHECKS + 1))
+  echo "ok: report-text-bytes"
+else
+  echo "FAIL: report text differs from expected"
+  cat "$TMP/report.diff"
+  exit 1
+fi
+(cd "$TMP" && "$VDS" report --package reppkg --format json > "$TMP/report.json")
+check "report-json-exit" 0 "$?"
+if diff -u "$EXP/report-json.json" "$TMP/report.json" > "$TMP/report-jdiff"; then
+  CHECKS=$((CHECKS + 1))
+  echo "ok: report-json-bytes"
+else
+  echo "FAIL: report json differs from expected"
+  cat "$TMP/report-jdiff"
+  exit 1
+fi
+
+# 21b. report shortfall: a quota miss prints SHORTFALL and exits 1
+mkdir -p "$TMP/repshort/evidence" "$TMP/repshort/ev"
+cp "$TMP/reppkg/"*.jsonl "$TMP/reppkg/"*.json "$TMP/reppkg/"*.md "$TMP/repshort/"
+cp -r "$TMP/reppkg/evidence" "$TMP/reppkg/ev" "$TMP/repshort/"
+printf '{"min_tier_a": 2, "quota": {"per_source": 1, "total": 2}, "source_registry": ["TEST"], "topic": "shortfall"}\n' > "$TMP/repshort/contract.json"
+OUT="$(cd "$TMP" && "$VDS" report --package repshort)"
+check "report-shortfall-exit" 1 "$?"
+need "report-shortfall-marker" "verdict: SHORTFALL" "$OUT"
+need "report-shortfall-detail" "tier_a 1/2 SHORTFALL" "$OUT"
+OUT="$(cd "$TMP" && "$VDS" report --package repshort --format json)"
+check "report-shortfall-json-exit" 1 "$?"
+need "report-shortfall-json-marker" '"verdict": "SHORTFALL"' "$OUT"
+
+# 21c. report without a contract: verdict UNKNOWN, exit 1 (no quota to meet)
+mkdir -p "$TMP/repnoc/evidence" "$TMP/repnoc/ev"
+cp "$TMP/reppkg/"*.jsonl "$TMP/reppkg/"*.json "$TMP/reppkg/"*.md "$TMP/repnoc/"
+cp -r "$TMP/reppkg/evidence" "$TMP/reppkg/ev" "$TMP/repnoc/"
+rm "$TMP/repnoc/contract.json"
+OUT="$(cd "$TMP" && "$VDS" report --package repnoc)"
+check "report-unknown-exit" 1 "$?"
+need "report-unknown-marker" "verdict: UNKNOWN" "$OUT"
+
+# 21d. report refuses a package without final.jsonl; bare report is usage error
+mkdir -p "$TMP/repbad"
+OUT="$("$VDS" report --package "$TMP/repbad")"
+check "report-nofinal-exit" 1 "$?"
+need "report-nofinal-msg" "report refused" "$OUT"
+printf '{oops' > "$TMP/repshort/contract.json"
+OUT="$(cd "$TMP" && "$VDS" report --package repshort)"
+check "report-badcontract-exit" 1 "$?"
+need "report-badcontract-msg" "cannot load" "$OUT"
+"$VDS" report > /dev/null 2>&1
+check "report-badusage-exit" 2 "$?"
+
+# 21e. report on a dirty-but-parseable package: full output + errors, exit 1
+mkdir -p "$TMP/repdirty/evidence" "$TMP/repdirty/ev"
+cp "$TMP/reppkg/"*.jsonl "$TMP/reppkg/"*.json "$TMP/reppkg/"*.md "$TMP/repdirty/"
+cp -r "$TMP/reppkg/evidence" "$TMP/reppkg/ev" "$TMP/repdirty/"
+rm "$TMP/repdirty/evidence/p1.txt"
+OUT="$(cd "$TMP" && "$VDS" report --package repdirty)"
+check "report-dirty-exit" 1 "$?"
+need "report-dirty-counts" "final: pass=2 reject=0 tier_a=1 tier_b=1" "$OUT"
+need "report-dirty-verdict" "verdict: MET" "$OUT"
+need "report-dirty-errors" "^errors:$" "$OUT"
+need "report-dirty-finding" "not found" "$OUT"
+OUT="$(cd "$TMP" && "$VDS" report --package repdirty --format json)"
+check "report-dirty-json-exit" 1 "$?"
+need "report-dirty-json-errors" '"errors"' "$OUT"
+need "report-dirty-json-verdict" '"verdict": "MET"' "$OUT"
+
+# 21f. report refuses with no output only when inputs do not parse at all
+mkdir -p "$TMP/repjson/evidence" "$TMP/repjson/ev"
+cp "$TMP/reppkg/"*.jsonl "$TMP/reppkg/"*.json "$TMP/reppkg/"*.md "$TMP/repjson/"
+cp -r "$TMP/reppkg/evidence" "$TMP/reppkg/ev" "$TMP/repjson/"
+printf '{oops\n' >> "$TMP/repjson/final.jsonl"
+OUT="$(cd "$TMP" && "$VDS" report --package repjson)"
+check "report-jsonparse-exit" 1 "$?"
+need "report-jsonparse-refused" "report refused" "$OUT"
+need "report-jsonparse-msg" "invalid JSON" "$OUT"
+printf '%s' "$OUT" | grep -q "verdict:" && {
+  echo "FAIL: a refused report must not print a verdict"; exit 1; }
+CHECKS=$((CHECKS + 1))
+echo "ok: report-jsonparse-noverdict"
+
 echo "ALL UNIT TESTS PASSED ($CHECKS checks)"

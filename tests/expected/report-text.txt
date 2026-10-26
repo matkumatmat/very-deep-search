@@ -1,0 +1,19 @@
+report: reppkg
+quota: total=2 per_source=1 min_tier_a=1 sources=TEST
+final: pass=2 reject=0 tier_a=1 tier_b=1
+merged: pass=2 reject=1
+manifest: rows=3 relevant=2 not_relevant=0 download_failed=1
+per_source: target=1 each [TEST]; delivered=not attributable (rows carry no source field)
+files:
+  README.md
+  contract.json
+  ev/k1.txt
+  ev/k2.txt
+  evidence/p1.txt
+  evidence/p2.txt
+  excluded-from-final.md
+  final.jsonl
+  manifest.jsonl
+  merged.jsonl
+  needs-richer-check.jsonl
+verdict: MET (tier_a 1/1 MET; total 2/2 MET)

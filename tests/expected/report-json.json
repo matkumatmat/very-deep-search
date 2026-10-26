@@ -1,0 +1,51 @@
+{
+  "counts": {
+    "final": {
+      "pass": 2,
+      "reject": 0,
+      "tier_a": 1,
+      "tier_b": 1
+    },
+    "manifest": {
+      "download_failed": 1,
+      "not_relevant": 0,
+      "relevant": 2,
+      "rows": 3
+    },
+    "merged": {
+      "pass": 2,
+      "reject": 1
+    }
+  },
+  "files": [
+    "README.md",
+    "contract.json",
+    "ev/k1.txt",
+    "ev/k2.txt",
+    "evidence/p1.txt",
+    "evidence/p2.txt",
+    "excluded-from-final.md",
+    "final.jsonl",
+    "manifest.jsonl",
+    "merged.jsonl",
+    "needs-richer-check.jsonl"
+  ],
+  "package": "reppkg",
+  "per_source": {
+    "delivered": null,
+    "note": "not attributable: package rows carry no source field",
+    "targets": {
+      "TEST": 1
+    }
+  },
+  "quota": {
+    "min_tier_a": 1,
+    "per_source": 1,
+    "sources": [
+      "TEST"
+    ],
+    "total": 2
+  },
+  "verdict": "MET",
+  "verdict_detail": "tier_a 1/1 MET; total 2/2 MET"
+}

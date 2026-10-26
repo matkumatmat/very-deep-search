@@ -343,6 +343,19 @@ deterministic):
   per record. Use after packaging, when the user wants ranked
   relevance — never as a substitute for the evidence pipeline.
   Exit 0 scored, 1 data/API error, 2 bad usage.
+- `vds.py report --package <dir> [--format text|json]`:
+  machine-true counts block + file inventory + quota verdict
+  for the completion report (§13a). Reads contract, final,
+  manifest, and merged under the package root. Missing
+  final/manifest or unparseable JSONL refuses with no report;
+  anything else printable still prints, with validation
+  findings listed under `errors:` (text) or `"errors"` (json)
+  — counts are best-effort when errors are present.
+  Per-source delivered counts are not attributable (package
+  rows carry no source field) — targets only. Verdict: MET,
+  SHORTFALL (Tier-A and/or total below quota), or UNKNOWN
+  (no usable contract). Exit 0 quota met with no errors,
+  1 shortfall/unknown/errors/refused, 2 bad usage.
 
 Example:
 
@@ -366,3 +379,47 @@ without reading its source. When this section and `--help` disagree,
 - No force-downloading paywalled or access-controlled content.
 - No burst traffic: every source interaction follows its card's
   courtesy rules.
+
+## 13. Completion report
+
+Every run ends with a completion report. REQUIRED template —
+fixed headings in fixed order. A report missing any section
+is incomplete:
+
+### (a) Counts
+
+Paste the `vds.py report --package <dir>` output verbatim
+(text format) — never hand-type numbers. Quota vs delivered
+per tier plus the MET/SHORTFALL verdict come from the tool,
+not from memory. If the output lists errors, paste them too —
+counts are best-effort then, and each error gets a follow-up
+in (e).
+
+### (b) File inventory
+
+Relative paths of every delivered file (the tool's `files:`
+list, or the package README contents). Workspace-relative,
+never absolute. Run the tool against the package directory
+itself: against a task root the inventory also covers
+workspace/ and any nested package/ copy.
+
+### (c) Gates evidence
+
+Exact commands plus their outputs: `vds.py validate`,
+`tests/run.sh` (when the skill itself changed), and any
+re-verification replays. Command + full output or the exit
+line — a bare "passed" with no command is not evidence.
+
+### (d) Rejected / excluded identifiers
+
+Every rejected or merged-but-not-final identifier with its
+reason, derived from the package files (`merged.jsonl` vs
+`final.jsonl`, `excluded-from-final.md`, lane files) — never
+from memory. Empty only when nothing was rejected or excluded.
+
+### (e) Known gaps + follow-ups
+
+What is unverified, blocked, or queued (`needs-richer-check`
+entries, Tier-B rows, open disputes) and the concrete next
+step for each. "None" is allowed only when every quota leg
+is MET and every queue is empty.
